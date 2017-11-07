@@ -78,9 +78,10 @@ public class Repository {
     }
     
     public void listFiles() {
-        database.reload();
         
         System.out.println("[ INFO ] Repo: Listing files in local repo...");
+        
+        database.reload();
         
         // TODO: sort the list by date added
         Set<Map.Entry<String, RepositoryFile>> fileSet = database.getFilesMap().entrySet();

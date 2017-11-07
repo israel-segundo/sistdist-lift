@@ -55,13 +55,14 @@ public class Client {
         // 
         // Parser
         //
-        for (String opt : args) {
+        loop: for (String opt : args) {
         
             switch(opt) {
                 
                 case SHARE_FILE_CMD:
                     checkOptArgsNumber(SHARE_FILE_CMD, args, 2);
-                    break;
+                    // do share file
+                    break loop;
                 
                 case LIST_FILES_IN_REPO_CMD:
                     // do list files
@@ -69,11 +70,13 @@ public class Client {
                 
                 case REMOVE_FILE_FROM_REPO_CMD:
                     checkOptArgsNumber(REMOVE_FILE_FROM_REPO_CMD, args, 2);
-                    break;
+                    // do remove file
+                    break loop;
                     
                 case ADD_FILE_TO_REPO_CMD:
                     checkOptArgsNumber(ADD_FILE_TO_REPO_CMD, args, 2);
-                    break;
+                    // do add file
+                    break loop;
                 
                 case SHOW_USER_SESSION_ID_CMD:
                     // do show user session id
@@ -81,10 +84,13 @@ public class Client {
                 
                 case GET_FILE_FROM_UFL_CMD:
                     checkOptArgsNumber(GET_FILE_FROM_UFL_CMD, args, 2);
-                    break;
+                    // do get file
+                    break loop;
+                    
                 case GET_UFL_FROM_FILE_CMD:
                     checkOptArgsNumber(GET_UFL_FROM_FILE_CMD, args, 2);
-                    break;
+                    // do get ufl
+                    break loop;
                 
                 case SHOW_VERSION_INFO_CMD:
                     showVersion();
