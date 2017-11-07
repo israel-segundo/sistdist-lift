@@ -22,15 +22,13 @@ public class Repository {
     
     public static void main(String[] args) {
         Repository repo =  new Repository();
-        repo.initializeDatabase();
         
-        repo.addFile("C:\\Program");
+        repo.addFile("/Users/agarcia/.profile");
         repo.listFiles();
     }
     
     
-    
-    public void createRepo() {
+    public Repository() {
         initializeDatabase();
     }
     
@@ -48,24 +46,27 @@ public class Repository {
         } else {
             
             database.reload();
-            RepositoryFile repoFile = new RepositoryFile(filePath);
-            repoFile.setSize(file.length());
             
-            // TODO: check if the file has not been added before
             String fileID = RepositoryFile.generateFileID(filePath);
             
+            // Check if the file has already been added
             if(database.getFilesMap().containsKey(fileID)) {
                 System.out.println("[ INFO ] Repo: The file: [" + filePath + "] is already in repository.");
                 return isFileAdded;
-            } else {
-                database.getFilesMap().put(repoFile.getGUID(), repoFile);
-                isFileAdded = database.commit();
             }
+            
+            RepositoryFile repoFile = new RepositoryFile(filePath);
+            repoFile.setSize(file.length());
+            
+            database.getFilesMap().put(repoFile.getGUID(), repoFile);
+            isFileAdded = database.commit();
             
         }
         
         if(isFileAdded) {
             System.out.println("[ INFO ] Repo: File added to repository: " + filePath);
+        } else {
+            System.out.println("[ ERROR ] Repo: File could not be added to repository: " + filePath);
         }
         
         return isFileAdded;
@@ -83,7 +84,7 @@ public class Repository {
         
         // TODO: sort the list by date added
         Set<Map.Entry<String, RepositoryFile>> fileSet = database.getFilesMap().entrySet();
-        // TODO: make the output fixed for the size of the longer entry
+        // TODO: make the output fixed for the size of the longest entry
         String format = "%-30s%-20s%-20s%-30s%-20s\n";
         System.out.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS");
 

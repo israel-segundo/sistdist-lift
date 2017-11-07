@@ -127,16 +127,16 @@ public class Client {
     private static void showVersion() {
         System.out.printf("Client:\n");
         System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:", CLIENT_BUILD_DATE);
+        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
         System.out.printf("\nServer:\n");
         System.out.printf(" %-15s%s\n", "Version:", SERVER_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:", SERVER_BUILD_DATE);
+        System.out.printf(" %-15s%s\n", "Built:",   SERVER_BUILD_DATE);
         System.out.printf("\n");
     }
     
     private static void checkOptArgsNumber(String opt, String[] args, int requiredArgsNumber) {
         if (args.length != requiredArgsNumber) {
-            System.out.println("'lift " + opt + "' requires exactly " + (requiredArgsNumber - 1) + " argument");
+            System.out.println("'lift " + opt + "' requires exactly " + (requiredArgsNumber - 1) + " argument(s)");
             System.out.println("See 'lift --help'");
             System.exit(0);
         }
