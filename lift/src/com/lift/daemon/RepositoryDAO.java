@@ -1,4 +1,4 @@
-package com.lift.repo;
+package com.lift.daemon;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -24,6 +24,7 @@ public class RepositoryDAO {
     private File databaseFile                     = null;
     private Map<String, RepositoryFile> filesMap  = null;
     private Gson gson                             = null;
+    private int fileCount                         = 0;
     
     // This is some GSON magic!
     private Type type = new TypeToken<Map<String, RepositoryFile>>(){}.getType(); 
@@ -32,6 +33,7 @@ public class RepositoryDAO {
         this.databaseFile = databaseFile;
         this.filesMap     = new HashMap<>();
         this.gson         = new Gson();
+        this.fileCount    = 0;
     }
     
     public Map<String, RepositoryFile> getFilesMap() {
@@ -41,13 +43,17 @@ public class RepositoryDAO {
     public File getDatabaseFile() {
         return databaseFile;
     }
+    
+    public int getFileCount() {
+        return fileCount;
+    }
 
     public void setDatabaseFile(File databaseFile) {
         this.databaseFile = databaseFile;
     }
 
     public void reload() {
-        System.out.println("[ INFO ] Database: Loading repository state from file ...");
+        System.out.println("[ INFO ] Database: Loading repository state from file...");
         
         try (Reader reader = new FileReader(databaseFile)) {
             filesMap = gson.fromJson(reader, type);
@@ -64,6 +70,7 @@ public class RepositoryDAO {
         System.out.println("[ INFO ] Database: Saving repository state to file ...");
         
         try (Writer writer = new FileWriter(databaseFile)) {
+            fileCount = filesMap.size();
             gson.toJson(filesMap, writer);
             isSaved = true;
             

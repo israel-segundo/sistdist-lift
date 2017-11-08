@@ -9,12 +9,7 @@ import java.util.Map;
  * @author Alejandro Garcia
  * @author Israel Segundo
  */
-public class Client {
-    
-    private static final String CLIENT_VERSION = "1.0.0";
-    private static final String CLIENT_BUILD_DATE = "Thursday 7 Nov, 2017";
-    private static final String SERVER_VERSION = "1.0.0";
-    private static final String SERVER_BUILD_DATE = "Thursday 7 Nov, 2017";
+public class ClientLauncher {
     
     /*
      *  Client operations constants
@@ -52,6 +47,7 @@ public class Client {
         
         initOptions();
         
+        ClientManager client = new ClientManager();
         // 
         // Parser
         //
@@ -61,49 +57,49 @@ public class Client {
                 
                 case SHARE_FILE_CMD:
                     checkOptArgsNumber(SHARE_FILE_CMD, args, 2);
-                    // do share file
+                    client.share(args[1]);
                     break loop;
                 
                 case LIST_FILES_IN_REPO_CMD:
-                    // do list files
+                    client.files();
                     break;
                 
                 case REMOVE_FILE_FROM_REPO_CMD:
                     checkOptArgsNumber(REMOVE_FILE_FROM_REPO_CMD, args, 2);
-                    // do remove file
+                    client.rm(args[1]);
                     break loop;
                     
                 case ADD_FILE_TO_REPO_CMD:
                     checkOptArgsNumber(ADD_FILE_TO_REPO_CMD, args, 2);
-                    // do add file
+                    client.add(args[1]);
                     break loop;
                 
                 case SHOW_USER_SESSION_ID_CMD:
-                    // do show user session id
+                    client.id();
                     break;
                 
                 case GET_FILE_FROM_UFL_CMD:
                     checkOptArgsNumber(GET_FILE_FROM_UFL_CMD, args, 2);
-                    // do get file
+                    client.get(args[1]);
                     break loop;
                     
                 case GET_UFL_FROM_FILE_CMD:
                     checkOptArgsNumber(GET_UFL_FROM_FILE_CMD, args, 2);
-                    // do get ufl
+                    client.ufl(args[1]);
                     break loop;
                 
                 case SHOW_VERSION_INFO_CMD:
-                    showVersion();
-                    break;
+                    client.version();
+                    break loop;
                 
                 case SHOW_HELP_OPT:
                     showUsage();
-                    break;
+                    break loop;
                 
                 default:
                     System.out.println("lift: '" + opt + "' is not a lift command.");
                     System.out.println("See 'lift --help'");
-                    break;
+                    break loop;
             
             }
         }
@@ -127,16 +123,6 @@ public class Client {
             System.out.printf("  %-10s%s\n", command, commandDescriptions.get(command));
         });
         
-        System.out.printf("\n");
-    }
-    
-    private static void showVersion() {
-        System.out.printf("Client:\n");
-        System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
-        System.out.printf("\nServer:\n");
-        System.out.printf(" %-15s%s\n", "Version:", SERVER_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   SERVER_BUILD_DATE);
         System.out.printf("\n");
     }
     
