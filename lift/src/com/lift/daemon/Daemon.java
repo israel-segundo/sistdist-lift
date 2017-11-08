@@ -109,6 +109,8 @@ public class Daemon {
     *  Get the user GUID in the network
     */
     public String id() {
+        sessionDatabase.reload();
+        
         return session.getGUID();
     }
     
@@ -162,6 +164,8 @@ public class Daemon {
     public String ufl(String fileID) {
         String ufl = null;
         
+        repositoryDatabase.reload();
+        
         if(repositoryDatabase.getFilesMap().keySet().contains(fileID)) {
             
             String decodedUFL = session.getGUID() + ":" + fileID;
@@ -169,7 +173,7 @@ public class Daemon {
             byte[] e = Base64.getEncoder().encode(decodedUFL.getBytes());
             ufl = new String(e);
             
-            String format = "%\n\t-10s%-30s\n";
+            String format = "\n\t%-10s%-30s\n";
             System.out.format(format, "UFL is:", ufl);
             
         } else {
