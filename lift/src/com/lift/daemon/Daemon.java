@@ -17,10 +17,14 @@ import java.util.Set;
  */
 public class Daemon {
     
+    private static final String CLIENT_VERSION      = "1.0.0";
+    private static final String CLIENT_BUILD_DATE   = "Thursday 7 Nov, 2017";
+    private static final String SERVER_VERSION      = "1.0.0";
+    private static final String SERVER_BUILD_DATE   = "Thursday 7 Nov, 2017";
     private static final File SESSION_FILE_ROUTE     = new File("session.json");
     private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
+    
     private RepositoryDAO repositoryDatabase         = null;
-    private Session session                          = null;
     private SessionDAO sessionDatabase               = null;
     
     
@@ -109,7 +113,10 @@ public class Daemon {
     *  Get the user GUID in the network
     */
     public String id() {
-        return session.getGUID();
+        String id = sessionDatabase.getSession().getGUID();
+        String format = "\n\t%-10s%-35s\n";
+        System.out.format(format, "GUID is:", id);
+        return id;
     }
     
     
@@ -166,7 +173,7 @@ public class Daemon {
         
         if(repositoryDatabase.getFilesMap().keySet().contains(fileID)) {
             
-            String decodedUFL = session.getGUID() + ":" + fileID;
+            String decodedUFL = sessionDatabase.getSession().getGUID() + ":" + fileID;
             
             byte[] e = Base64.getEncoder().encode(decodedUFL.getBytes());
             ufl = new String(e);
@@ -184,6 +191,24 @@ public class Daemon {
     }
     
     
+    /*
+    *  Show the version from client and server
+    */
+    public String version() {
+        System.out.printf("Client:\n");
+        System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
+        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
+        // TODO: obtain below properties from server
+        System.out.printf("\nServer:\n");
+        System.out.printf(" %-15s%s\n", "Version:", SERVER_VERSION);
+        System.out.printf(" %-15s%s\n", "Built:",   SERVER_BUILD_DATE);
+        System.out.printf("\n");
+        
+        return null;
+    }
+    
+    
+    
     
     /*
     *  Private methods
@@ -192,25 +217,28 @@ public class Daemon {
         
         initSessionDatabase();
         
+        String guid = null;
+        
         if(SESSION_FILE_ROUTE.exists()) {
             // Load session from file
             sessionDatabase.reload();
-            session = sessionDatabase.getSession();
+            guid = sessionDatabase.getSession().getGUID();
             
-            System.out.println("[ Session ]: " + session.getGUID());
         } else {
             // TODO: Connect to server...
             // if connect is successful, do below
-            session = new Session();
+            Session session = new Session();
             String timestamp = CommonUtility.generateDate();
 
             session.setIsConnected(true);
             session.setDateJoined(timestamp);
-            System.out.println("[ Session ]: " + session.getGUID());
+            guid = session.getGUID();
             
-            sessionDatabase.commit(session);
+            sessionDatabase.setSession(session);
+            sessionDatabase.commit();
         }
         
+        System.out.println("[ INFO ] Session GUID: " + guid);
     }
     
     private void initRepository() {

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
-import java.util.Map;
 
 /**
  * This DAO class handles the session persistence in the local client.
@@ -35,6 +34,10 @@ public class SessionDAO {
         return session;
     }
     
+    public void setSession(Session session) {
+        this.session = session;
+    }
+    
     public void reload() {
         System.out.println("[ INFO ] Database: Loading session state from file...");
         
@@ -49,7 +52,7 @@ public class SessionDAO {
         }
     }
     
-    public boolean commit(Session session) {
+    public boolean commit() {
         boolean isSaved = false;
         System.out.println("[ INFO ] Database: Saving session state to file ...");
         

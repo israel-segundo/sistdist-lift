@@ -10,12 +10,6 @@ import com.lift.daemon.Daemon;
  */
 public class ClientManager {
     
-    private static final String CLIENT_VERSION      = "1.0.0";
-    private static final String CLIENT_BUILD_DATE   = "Thursday 7 Nov, 2017";
-    private static final String SERVER_VERSION      = "1.0.0";
-    private static final String SERVER_BUILD_DATE   = "Thursday 7 Nov, 2017";
-    
-    
     private final String repoFileRoute    = "repo.json";
     private final String sharedDirRoute   = "/scratch/lift/";
     private final String daemonPort       = "45115";
@@ -50,13 +44,6 @@ public class ClientManager {
     }
     
     public void version() {
-        System.out.printf("Client:\n");
-        System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
-        // TODO: obtain below properties from server
-        System.out.printf("\nServer:\n");
-        System.out.printf(" %-15s%s\n", "Version:", SERVER_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   SERVER_BUILD_DATE);
-        System.out.printf("\n");
+        daemon.version();
     }
 }

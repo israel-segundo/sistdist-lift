@@ -14,7 +14,7 @@ public class Session {
     private boolean isConnected;
     
     public Session() {
-        this.GUID = CommonUtility.generateGUID(0, 24);
+        this.GUID = CommonUtility.generateGUID(0, 32);
         this.dateJoined = CommonUtility.generateDate();
         this.isConnected = false;
     }

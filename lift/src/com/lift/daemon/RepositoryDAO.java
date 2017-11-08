@@ -55,6 +55,8 @@ public class RepositoryDAO {
     public void reload() {
         System.out.println("[ INFO ] Database: Loading repository state from file...");
         
+        if(!databaseFile.exists()) return;
+        
         try (Reader reader = new FileReader(databaseFile)) {
             
             filesMap = gson.fromJson(reader, type);
