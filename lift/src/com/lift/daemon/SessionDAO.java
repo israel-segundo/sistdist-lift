@@ -22,9 +22,12 @@ public class SessionDAO {
     private Session session     = null;
     private Gson gson           = null;
     
+    // This is some GSON magic!
+    private Type type = new TypeToken<Session>(){}.getType(); 
+    
     public SessionDAO(File sessionFile){
         this.sessionFile = sessionFile;
-        this.session     = Session.getInstance();
+        this.session     = new Session();
         this.gson        = new Gson();
     }
     
@@ -33,9 +36,13 @@ public class SessionDAO {
     }
     
     public void reload() {
+        System.out.println("[ INFO ] Database: Loading session state from file...");
+        
         try (Reader reader = new FileReader(sessionFile)) {
             
-            session = gson.fromJson(reader, Session.class);
+            session = gson.fromJson(reader, type);
+            
+            System.out.println("[ INFO ] Database: Session finished loading.");
             
         } catch (IOException ex) {
             System.out.println("[ ERROR ] Session: Error when loading the user session.");
@@ -44,11 +51,13 @@ public class SessionDAO {
     
     public boolean commit(Session session) {
         boolean isSaved = false;
+        System.out.println("[ INFO ] Database: Saving session state to file ...");
         
         try (Writer writer = new FileWriter(sessionFile)) {
             
             gson.toJson(session, writer);
             isSaved = true;
+            System.out.println("[ INFO ] Database: Saving session completed.");
             return isSaved;
             
         } catch (IOException ex) {

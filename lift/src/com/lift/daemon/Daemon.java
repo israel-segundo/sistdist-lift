@@ -109,8 +109,6 @@ public class Daemon {
     *  Get the user GUID in the network
     */
     public String id() {
-        sessionDatabase.reload();
-        
         return session.getGUID();
     }
     
@@ -198,14 +196,17 @@ public class Daemon {
             // Load session from file
             sessionDatabase.reload();
             session = sessionDatabase.getSession();
+            
+            System.out.println("[ Session ]: " + session.getGUID());
         } else {
             // TODO: Connect to server...
             // if connect is successful, do below
-            session = Session.getInstance();
+            session = new Session();
             String timestamp = CommonUtility.generateDate();
 
             session.setIsConnected(true);
             session.setDateJoined(timestamp);
+            System.out.println("[ Session ]: " + session.getGUID());
             
             sessionDatabase.commit(session);
         }

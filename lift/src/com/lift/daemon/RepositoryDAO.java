@@ -56,8 +56,8 @@ public class RepositoryDAO {
         System.out.println("[ INFO ] Database: Loading repository state from file...");
         
         try (Reader reader = new FileReader(databaseFile)) {
-            filesMap = gson.fromJson(reader, type);
             
+            filesMap = gson.fromJson(reader, type);
             System.out.println("[ INFO ] Database: Repository finished loading.");
             
         } catch (IOException ex) {
@@ -70,6 +70,7 @@ public class RepositoryDAO {
         System.out.println("[ INFO ] Database: Saving repository state to file ...");
         
         try (Writer writer = new FileWriter(databaseFile)) {
+            
             fileCount = filesMap.size();
             gson.toJson(filesMap, writer);
             isSaved = true;
