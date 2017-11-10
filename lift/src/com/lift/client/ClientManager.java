@@ -1,5 +1,6 @@
 package com.lift.client;
 
+import com.lift.common.LiftOpt;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.Transaction;
@@ -23,7 +24,7 @@ public class ClientManager {
     
     private static final String CLIENT_VERSION    = "1.0.0";
     private static final String CLIENT_BUILD_DATE = Calendar.getInstance().getTime().toString();
-    private static final int SUCCESS = 0;
+    private static final int SUCCESS              = 0;
     
     private static final String SHARED_DIR_ROUTE  = "/scratch/lift/";
     private static final int DAEMON_PORT          = 45115;
@@ -65,7 +66,7 @@ public class ClientManager {
     
     public void files() {
         
-        Transaction transaction = new Transaction("files", null);
+        Transaction transaction = new Transaction(LiftOpt.FILES, null);
         Result result           = sendOperationToDaemon(transaction);
         
         // Do something with result...
@@ -78,15 +79,15 @@ public class ClientManager {
             StringBuilder sb = new StringBuilder();
 
             String format = "%-30s%-20s%-20s%-30s%-20s\n";
-            sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS"));
+            sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS") );
 
             fileSet.forEach((entry) -> {
                 String location = entry.getValue().getName();
-                String size = entry.getValue().getSize() + "";
+                String size = String.valueOf(entry.getValue().getSize());
                 String fileID = entry.getValue().getGUID();
                 String dateAdded = entry.getValue().getDateAdded();
-                String hits = entry.getValue().getHits() + "";
-                sb.append( String.format(format, location, size, fileID, dateAdded, hits));
+                String hits = String.valueOf(entry.getValue().getHits());
+                sb.append( String.format(format, location, size, fileID, dateAdded, hits) );
             });
 
             System.out.println(sb.toString());
@@ -98,36 +99,67 @@ public class ClientManager {
     
     public void add(String filePath) {
         
-        Transaction transaction = new Transaction("add", filePath);
+        Transaction transaction = new Transaction(LiftOpt.ADD, filePath);
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
-            System.out.println("File added. ID: " + result.getResult());
+            // Do nothing
         } else {
             System.out.println(result.getMessage());
         }
     }
     
-
-    
     public void get(String UFL) {
     }
     
     public void id() {
+        Transaction transaction = new Transaction(LiftOpt.ID, null);
+        Result result           = sendOperationToDaemon(transaction);
+        
+        if(result.getReturnCode() == SUCCESS) {
+            System.out.format("%-10s%-35s\n", "GUID is:", result.getResult());
+        } else {
+            System.out.println(result.getMessage());
+        }
     }
     
     public void rm(String fileID) {
+        Transaction transaction = new Transaction(LiftOpt.RM, fileID);
+        Result result           = sendOperationToDaemon(transaction);
+        
+        if(result.getReturnCode() == SUCCESS) {
+            System.out.println(result.getResult());
+        } else {
+            System.out.println(result.getMessage());
+        }
     }
     
     public void share(String filePath) {
     }
     
     public void ufl(String fileID) {
+        Transaction transaction = new Transaction(LiftOpt.UFL, fileID);
+        Result result           = sendOperationToDaemon(transaction);
+
+        if (result.getReturnCode() == SUCCESS) {
+            System.out.printf("%-10s%-30s\n", "UFL is:", result.getResult());
+        } else {
+            System.out.println(result.getMessage());
+        }
     }
     
     public void version() {
+        Transaction transaction = new Transaction(LiftOpt.VERSION, null);
+        Result result           = sendOperationToDaemon(transaction);
+        String[] serverValues   = (String[])result.getResult();
+        
         System.out.printf("Client:\n");
-        System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
+        String format = " %-15s%s\n";
+        System.out.printf(format, "Version:", CLIENT_VERSION);
+        System.out.printf(format, "Built:",   CLIENT_BUILD_DATE);
+        System.out.printf("\nServer:\n");
+        System.out.printf(" %-15s%s\n", "Version:", serverValues[0]);
+        System.out.printf(" %-15s%s\n", "Built:",   serverValues[1]);
+        System.out.printf("\n");
     }
 }

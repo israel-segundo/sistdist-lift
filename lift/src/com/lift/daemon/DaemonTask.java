@@ -1,9 +1,10 @@
-
 package com.lift.daemon;
 
+import com.lift.common.LiftOpt;
 import com.lift.daemon.command.AddCommand;
-import com.lift.daemon.command.Command;
 import com.lift.daemon.command.FilesCommand;
+import com.lift.daemon.command.IdCommand;
+import com.lift.daemon.command.RmCommand;
 import com.lift.daemon.command.ShareCommand;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -11,15 +12,20 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.lift.daemon.command.LiftCommand;
+import com.lift.daemon.command.UflCommand;
+import com.lift.daemon.command.VersionCommand;
 
 public class DaemonTask implements Runnable {
     
     Socket sock;
-    RepositoryDAO database;
+    RepositoryDAO repositoryDB;
+    SessionDAO sessionDB;
     
-    public DaemonTask(Socket sock, RepositoryDAO database){
-        this.sock       = sock;
-        this.database   = database;
+    public DaemonTask(Socket sock, RepositoryDAO repositoryDB, SessionDAO sessionDB){
+        this.sock         = sock;
+        this.repositoryDB = repositoryDB;
+        this.sessionDB    = sessionDB;
     }
     
     @Override
@@ -48,26 +54,43 @@ public class DaemonTask implements Runnable {
     
     private Result attendTransaction(Transaction transaction){
         
-        Command command  = null;
+        LiftCommand command  = null;
         
         switch(transaction.getOperation()){
-            case "files":
-                command = new FilesCommand(database);
-                break;
-                
-            case "add":
-                command = new AddCommand(transaction.getParameter(),database);
-                break;
-                
-            case "share":
-                command = new ShareCommand(transaction.getParameter());
-                break;
-                
-            case "get":
-               // command = new GetCommand(transaction.getParameter());
-                break;                  
-        }
             
+            case LiftOpt.ADD:
+                command = new AddCommand(transaction.getParameter(), repositoryDB);
+                break;
+                
+            case LiftOpt.FILES:
+                command = new FilesCommand(repositoryDB);
+                break;
+                
+            case LiftOpt.GET:
+                //command = new GetCommand(transaction.getParameter());
+                break;    
+                
+            case LiftOpt.ID:
+                command = new IdCommand(sessionDB);
+                break;    
+                
+            case LiftOpt.RM:
+                command = new RmCommand(transaction.getParameter(), repositoryDB);
+                break;    
+                
+            case LiftOpt.SHARE:
+                //command = new ShareCommand(transaction.getParameter());
+                break;
+                
+            case LiftOpt.UFL:
+                command = new UflCommand(transaction.getParameter(), repositoryDB, sessionDB);
+                break;    
+                
+            case LiftOpt.VERSION:
+                command = new VersionCommand();
+                break;    
+                              
+        }
             
         return command.execute();
     }    

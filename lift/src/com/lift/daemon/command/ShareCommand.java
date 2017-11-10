@@ -3,7 +3,7 @@ package com.lift.daemon.command;
 
 import com.lift.daemon.Result;
 
-public class ShareCommand implements Command {
+public class ShareCommand implements LiftCommand {
 
     private String filePath;
     

@@ -39,32 +39,32 @@ public class SessionDAO {
     }
     
     public void reload() {
-        System.out.println("[ INFO ] Database: Loading session state from file...");
+        System.out.println("[ INFO ] Session-Database: Loading session state from file...");
         
         try (Reader reader = new FileReader(sessionFile)) {
             
             session = gson.fromJson(reader, type);
             
-            System.out.println("[ INFO ] Database: Session finished loading.");
+            System.out.println("[ INFO ] Session-Database: Session finished loading.");
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Session: Error when loading the user session.");
+            System.out.println("[ ERROR ] Session-Database: Error when loading the user session.");
         }
     }
     
     public boolean commit() {
         boolean isSaved = false;
-        System.out.println("[ INFO ] Database: Saving session state to file ...");
+        System.out.println("[ INFO ] Session-Database: Saving session state to file ...");
         
         try (Writer writer = new FileWriter(sessionFile)) {
             
             gson.toJson(session, writer);
             isSaved = true;
-            System.out.println("[ INFO ] Database: Saving session completed.");
+            System.out.println("[ INFO ] Session-Database: Saving session completed.");
             return isSaved;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Session: Error when saving the user session.");
+            System.out.println("[ ERROR ] Session-Database: Error when saving the user session.");
             return isSaved;
         }
     }

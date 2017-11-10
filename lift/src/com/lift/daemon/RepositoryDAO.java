@@ -63,18 +63,18 @@ public class RepositoryDAO {
 
     public boolean reload() {
         boolean isLoaded = false;
-        System.out.println("[ INFO ] Database: Loading repository state from file...");
+        System.out.println("[ INFO ] Repo-Database: Loading repository state from file...");
         
         if(!databaseFile.exists()) return true;
         
         try (Reader reader = new FileReader(databaseFile)) {
             
             filesMap = gson.fromJson(reader, type);
-            System.out.println("[ INFO ] Database: Repository finished loading.");
+            System.out.println("[ INFO ] Repo-Database: Repository finished loading.");
             isLoaded = true;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Database: Error when loading the repository state.");
+            System.out.println("[ ERROR ] Repo-Database: Error when loading the repository state.");
             isLoaded = false;
         }
         
@@ -83,7 +83,7 @@ public class RepositoryDAO {
     
     public boolean commit() {
         boolean isSaved = false;
-        System.out.println("[ INFO ] Database: Saving repository state to file ...");
+        System.out.println("[ INFO ] Repo-Database: Saving repository state to file ...");
         
         try (Writer writer = new FileWriter(databaseFile)) {
             
@@ -91,11 +91,11 @@ public class RepositoryDAO {
             gson.toJson(filesMap, writer);
             isSaved = true;
             
-            System.out.println("[ INFO ] Database: Saving repository completed.");
+            System.out.println("[ INFO ] Repo-Database: Saving repository completed.");
             return isSaved;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Database: Error when saving the repository state.");
+            System.out.println("[ ERROR ] Repo-Database: Error when saving the repository state.");
             return isSaved;
         }
     }

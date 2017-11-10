@@ -8,7 +8,7 @@ import com.lift.daemon.Result;
 /*
  *  List all files in local repository
  */
-public class FilesCommand implements Command{
+public class FilesCommand implements LiftCommand{
 
     private RepositoryDAO repositoryDatabase         = null;
   
@@ -19,7 +19,7 @@ public class FilesCommand implements Command{
     @Override
     public Result execute() {
         
-        System.out.println("[ INFO ] Repo: Listing files in local repo...");
+        System.out.println("[ INFO ] FILES-CMD: Listing files in local repo...");
 
         boolean isDatabaseLoaded = repositoryDatabase.reload();
         Result result = new Result();
