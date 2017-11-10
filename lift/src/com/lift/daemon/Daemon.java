@@ -1,10 +1,20 @@
 package com.lift.daemon;
 
 import com.lift.common.CommonUtility;
+import com.lift.daemon.command.Command;
+import com.lift.daemon.command.FilesCommand;
+import com.lift.daemon.command.ShareCommand;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Lift Daemon
@@ -24,15 +34,44 @@ public class Daemon {
     private static final File SESSION_FILE_ROUTE     = new File("session.json");
     private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
     
-    private RepositoryDAO repositoryDatabase         = null;
-    private SessionDAO sessionDatabase               = null;
+    private static RepositoryDAO repositoryDatabase         = null;
+    private static SessionDAO sessionDatabase               = null;
     
+    private static final int portNumber          = 45115;
+    private static final String hostName         = "localhost";    
     
     public Daemon() {
-        initSession();
-        initRepository();
+
     }
     
+    public static void main(String[] args) {
+        
+        initSession();
+        initRepository();
+        
+        
+        ServerSocket serverSocket;
+        ExecutorService service = Executors.newFixedThreadPool(8);
+
+        try {
+            serverSocket = new ServerSocket(portNumber);
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("[ INFO ] Connection received.");
+                
+                service.execute(new DaemonTask(clientSocket, repositoryDatabase));
+            }
+
+        } catch (IOException e) {
+            System.out.println("[ ERROR ] Exception caught when trying to listen on port "
+                    + portNumber + " or listening for a connection");
+            System.out.println(e.getMessage());
+        }    
+    }
+    
+    
+
     
     /*
     *  Add a file to local repository
@@ -82,6 +121,8 @@ public class Daemon {
     *  List all files in local repository
     */
     public void files() {
+        
+        
         System.out.println("[ INFO ] Repo: Listing files in local repo...");
         
         repositoryDatabase.reload();
@@ -213,7 +254,7 @@ public class Daemon {
     /*
     *  Private methods
     */
-    private void initSession() {
+    private static void initSession() {
         
         initSessionDatabase();
         
@@ -241,17 +282,16 @@ public class Daemon {
         System.out.println("[ INFO ] Session GUID: " + guid);
     }
     
-    private void initRepository() {
+    private static void initRepository() {
         
         initRepositoryDatabase();
-    
     }
     
-    private void initSessionDatabase() {
-        this.sessionDatabase = new SessionDAO(SESSION_FILE_ROUTE);
+    private static void initSessionDatabase() {
+        sessionDatabase = new SessionDAO(SESSION_FILE_ROUTE);
     }
     
-    private void initRepositoryDatabase() {
+    private static void initRepositoryDatabase() {
         System.out.println("[ INFO ] Repository file is: " + REPOSITORY_FILE_ROUTE.getAbsolutePath());
         repositoryDatabase = new RepositoryDAO(REPOSITORY_FILE_ROUTE);
     }

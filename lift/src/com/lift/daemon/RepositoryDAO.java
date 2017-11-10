@@ -35,6 +35,15 @@ public class RepositoryDAO {
         this.gson         = new Gson();
         this.fileCount    = 0;
     }
+
+    public Gson getGson() {
+        return gson;
+    }
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
+    }
+    
     
     public Map<String, RepositoryFile> getFilesMap() {
         return filesMap;

@@ -62,7 +62,7 @@ public class ClientLauncher {
                 
                 case LIST_FILES_IN_REPO_CMD:
                     client.files();
-                    break;
+                    break loop;
                 
                 case REMOVE_FILE_FROM_REPO_CMD:
                     checkOptArgsNumber(REMOVE_FILE_FROM_REPO_CMD, args, 2);
@@ -76,7 +76,7 @@ public class ClientLauncher {
                 
                 case SHOW_USER_SESSION_ID_CMD:
                     client.id();
-                    break;
+                    break loop;
                 
                 case GET_FILE_FROM_UFL_CMD:
                     checkOptArgsNumber(GET_FILE_FROM_UFL_CMD, args, 2);
