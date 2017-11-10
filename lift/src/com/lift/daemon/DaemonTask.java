@@ -8,12 +8,11 @@ import com.lift.daemon.command.ShareCommand;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DaemonTask implements Runnable{
+public class DaemonTask implements Runnable {
     
     Socket sock;
     RepositoryDAO database;
@@ -27,9 +26,10 @@ public class DaemonTask implements Runnable{
     public void run() {
         
         try (
-                ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(sock.getInputStream());) {
-            
+            ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+            ) 
+        {    
             Transaction transaction = (Transaction) in.readObject();
        
             Result result = attendTransaction(transaction);
@@ -59,10 +59,11 @@ public class DaemonTask implements Runnable{
                 command = new AddCommand(transaction.getParameter(),database);
                 break;
                 
-             case "share":
+            case "share":
                 command = new ShareCommand(transaction.getParameter());
-                break;    
-             case "get":
+                break;
+                
+            case "get":
                // command = new GetCommand(transaction.getParameter());
                 break;                  
         }

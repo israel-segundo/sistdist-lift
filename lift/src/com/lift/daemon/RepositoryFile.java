@@ -1,10 +1,7 @@
 package com.lift.daemon;
 
 import com.lift.common.CommonUtility;
-import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.io.Serializable;
 
 /**
  * This class represents a file in Lift local repository
@@ -12,7 +9,7 @@ import java.util.TimeZone;
  * @author Alejandro Garcia
  * @author Israel Segundo
  */
-public class RepositoryFile {
+public class RepositoryFile implements Serializable {
     
     private String name;
     private int hits;

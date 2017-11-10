@@ -1,18 +1,11 @@
 package com.lift.daemon;
 
 import com.lift.common.CommonUtility;
-import com.lift.daemon.command.Command;
-import com.lift.daemon.command.FilesCommand;
-import com.lift.daemon.command.ShareCommand;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Base64;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,22 +20,17 @@ import java.util.concurrent.Executors;
  */
 public class Daemon {
     
-    private static final String CLIENT_VERSION      = "1.0.0";
-    private static final String CLIENT_BUILD_DATE   = "Thursday 7 Nov, 2017";
-    private static final String SERVER_VERSION      = "1.0.0";
-    private static final String SERVER_BUILD_DATE   = "Thursday 7 Nov, 2017";
+    private static final String SERVER_VERSION       = "1.0.0";
+    private static final String SERVER_BUILD_DATE    = "Thursday 7 Nov, 2017";
     private static final File SESSION_FILE_ROUTE     = new File("session.json");
     private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
     
-    private static RepositoryDAO repositoryDatabase         = null;
-    private static SessionDAO sessionDatabase               = null;
+    private static RepositoryDAO repositoryDatabase  = null;
+    private static SessionDAO sessionDatabase        = null;
     
-    private static final int portNumber          = 45115;
-    private static final String hostName         = "localhost";    
+    private static final int PORT_NUMBER             = 45115;
+    private static final String HOSTNAME             = "localhost";    
     
-    public Daemon() {
-
-    }
     
     public static void main(String[] args) {
         
@@ -51,10 +39,10 @@ public class Daemon {
         
         
         ServerSocket serverSocket;
-        ExecutorService service = Executors.newFixedThreadPool(8);
+        ExecutorService service = Executors.newCachedThreadPool();
 
         try {
-            serverSocket = new ServerSocket(portNumber);
+            serverSocket = new ServerSocket(PORT_NUMBER);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -65,84 +53,12 @@ public class Daemon {
 
         } catch (IOException e) {
             System.out.println("[ ERROR ] Exception caught when trying to listen on port "
-                    + portNumber + " or listening for a connection");
+                    + PORT_NUMBER + " or listening for a connection");
             System.out.println(e.getMessage());
         }    
     }
     
     
-
-    
-    /*
-    *  Add a file to local repository
-    */
-    public boolean add(String filePath) {
-        File file           = new File(filePath);
-        boolean isFileAdded = false;
-        
-        System.out.println("[ INFO ] Repo: Adding file [" + filePath + "] to repo...");
-        
-        if(!file.exists()) {
-            
-            System.out.println("[ ERROR ] Repo: Could not add the file to repository. No such file: " + filePath);
-            return isFileAdded;
-            
-        } else {
-            
-            repositoryDatabase.reload();
-            
-            String fileID = CommonUtility.generateHash(filePath);
-            
-            // Check if the file has already been added
-            if(repositoryDatabase.getFilesMap().containsKey(fileID)) {
-                System.out.println("[ INFO ] Repo: The file: [" + filePath + "] is already in repository.");
-                return isFileAdded;
-            }
-            
-            RepositoryFile repoFile = new RepositoryFile(filePath);
-            repoFile.setSize(file.length());
-            
-            repositoryDatabase.getFilesMap().put(repoFile.getGUID(), repoFile);
-            isFileAdded = repositoryDatabase.commit();
-            
-        }
-        
-        if(isFileAdded) {
-            System.out.println("[ INFO ] Repo: File added to repository: " + filePath);
-        } else {
-            System.out.println("[ ERROR ] Repo: File could not be added to repository: " + filePath);
-        }
-        
-        return isFileAdded;
-    }
-    
-    
-    /*
-    *  List all files in local repository
-    */
-    public void files() {
-        
-        
-        System.out.println("[ INFO ] Repo: Listing files in local repo...");
-        
-        repositoryDatabase.reload();
-        
-        // TODO: sort the list by date added
-        Set<Map.Entry<String, RepositoryFile>> fileSet = repositoryDatabase.getFilesMap().entrySet();
-        // TODO: make the output fixed for the size of the longest entry
-        String format = "%-30s%-20s%-20s%-30s%-20s\n";
-        System.out.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS");
-
-        fileSet.forEach((entry) -> {
-            String location     = entry.getValue().getName();
-            String size         = entry.getValue().getSize() + "";
-            String fileID       = entry.getValue().getGUID();
-            String dateAdded    = entry.getValue().getDateAdded();
-            String hits         = entry.getValue().getHits() + "";
-            System.out.format(format, location, size, fileID, dateAdded, hits);
-        });
-        
-    }
     
     // TODO
     public boolean get(String ufl) {
@@ -236,9 +152,6 @@ public class Daemon {
     *  Show the version from client and server
     */
     public String version() {
-        System.out.printf("Client:\n");
-        System.out.printf(" %-15s%s\n", "Version:", CLIENT_VERSION);
-        System.out.printf(" %-15s%s\n", "Built:",   CLIENT_BUILD_DATE);
         // TODO: obtain below properties from server
         System.out.printf("\nServer:\n");
         System.out.printf(" %-15s%s\n", "Version:", SERVER_VERSION);
@@ -268,7 +181,7 @@ public class Daemon {
         } else {
             // TODO: Connect to server...
             // if connect is successful, do below
-            Session session = new Session();
+            SessionFile session = new SessionFile();
             String timestamp = CommonUtility.generateDate();
 
             session.setIsConnected(true);

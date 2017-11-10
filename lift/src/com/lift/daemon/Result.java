@@ -4,14 +4,16 @@ package com.lift.daemon;
 import java.io.Serializable;
 
 
-public class Result<T> implements Serializable{
+public class Result<T> implements Serializable {
     
     private int returnCode;
     private String message;
     private T result;
 
     public Result(){
-        
+        this.returnCode = 1;
+        this.result = null;
+        this.message = null;
     }
     
     public Result(int returnCode, String message, T result) {

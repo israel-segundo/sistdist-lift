@@ -8,12 +8,12 @@ import com.lift.common.CommonUtility;
  * @author Alejandro Garcia
  * @author Israel Segundo
  */
-public class Session {
+public class SessionFile {
     private String GUID;
     private String dateJoined;
     private boolean isConnected;
     
-    public Session() {
+    public SessionFile() {
         this.GUID = CommonUtility.generateGUID(0, 32);
         this.dateJoined = CommonUtility.generateDate();
         this.isConnected = false;

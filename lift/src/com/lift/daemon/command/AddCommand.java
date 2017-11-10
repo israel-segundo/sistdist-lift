@@ -6,10 +6,9 @@ import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import java.io.File;
-import java.util.Map;
-import java.util.Set;
 
-public class AddCommand implements Command{
+
+public class AddCommand implements Command {
     
     private RepositoryDAO repositoryDatabase    = null;
     private String filePath                     = null;
@@ -22,15 +21,16 @@ public class AddCommand implements Command{
     @Override
     public Result execute() {
         
-        Result result       = new Result();
-        File file           = new File(filePath);
-        boolean isFileAdded = false;
+        Result result           = new Result();
+        File file               = new File(filePath);
+        boolean isFileAdded     = false;
+        RepositoryFile repoFile = null;
         
         System.out.println("[ INFO ] Repo: Adding file [" + filePath + "] to repo...");
         
         if(!file.exists()) {
-            
-            System.out.println("[ ERROR ] Repo: Could not add the file to repository. No such file: " + filePath);
+            System.out.println("[ INFO ] Repo: File [" + filePath + "] does not exist.");
+            return new Result(1, "Daemon: Could not add the file to repository. No such file: " + filePath, null);
             
         } else {
             
@@ -40,10 +40,11 @@ public class AddCommand implements Command{
             
             // Check if the file has already been added
             if(repositoryDatabase.getFilesMap().containsKey(fileID)) {
-                System.out.println("[ INFO ] Repo: The file: [" + filePath + "] is already in repository.");
+                System.out.println("[ INFO ] Repo: File [" + filePath + "] is already in repo.");
+                return new Result(2, "Daemon: The file is already in repository.", null);
             }
             
-            RepositoryFile repoFile = new RepositoryFile(filePath);
+            repoFile = new RepositoryFile(filePath);
             repoFile.setSize(file.length());
             
             repositoryDatabase.getFilesMap().put(repoFile.getGUID(), repoFile);
@@ -52,15 +53,14 @@ public class AddCommand implements Command{
         }
         
         if(isFileAdded) {
-            result.setMessage("[ INFO ] Repo: File added to repository: " + filePath);
+            result.setResult(repoFile.getGUID());
             result.setReturnCode(0);
             
         } else {
-            result.setMessage("[ ERROR ] Repo: File could not be added to repository: " + filePath);
+            result.setMessage("Daemon: Error when saving the repository state.");
             result.setReturnCode(1);
         }
         
-        System.out.println(result.getMessage());
         
         return result;
     }

@@ -61,19 +61,24 @@ public class RepositoryDAO {
         this.databaseFile = databaseFile;
     }
 
-    public void reload() {
+    public boolean reload() {
+        boolean isLoaded = false;
         System.out.println("[ INFO ] Database: Loading repository state from file...");
         
-        if(!databaseFile.exists()) return;
+        if(!databaseFile.exists()) return true;
         
         try (Reader reader = new FileReader(databaseFile)) {
             
             filesMap = gson.fromJson(reader, type);
             System.out.println("[ INFO ] Database: Repository finished loading.");
+            isLoaded = true;
             
         } catch (IOException ex) {
             System.out.println("[ ERROR ] Database: Error when loading the repository state.");
+            isLoaded = false;
         }
+        
+        return isLoaded;
     }
     
     public boolean commit() {

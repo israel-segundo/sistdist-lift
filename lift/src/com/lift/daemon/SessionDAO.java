@@ -18,23 +18,23 @@ import java.lang.reflect.Type;
  */
 public class SessionDAO {
     private File sessionFile    = null;
-    private Session session     = null;
+    private SessionFile session = null;
     private Gson gson           = null;
     
     // This is some GSON magic!
-    private Type type = new TypeToken<Session>(){}.getType(); 
+    private Type type = new TypeToken<SessionFile>(){}.getType(); 
     
     public SessionDAO(File sessionFile){
         this.sessionFile = sessionFile;
-        this.session     = new Session();
+        this.session     = new SessionFile();
         this.gson        = new Gson();
     }
     
-    public Session getSession() {
+    public SessionFile getSession() {
         return session;
     }
     
-    public void setSession(Session session) {
+    public void setSession(SessionFile session) {
         this.session = session;
     }
     
