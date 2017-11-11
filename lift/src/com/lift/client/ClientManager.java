@@ -1,6 +1,6 @@
 package com.lift.client;
 
-import com.lift.common.LiftOpt;
+import com.lift.common.Operation;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.Transaction;
@@ -66,7 +66,7 @@ public class ClientManager {
     
     public void files() {
         
-        Transaction transaction = new Transaction(LiftOpt.FILES, null);
+        Transaction transaction = new Transaction(Operation.FILES, null);
         Result result           = sendOperationToDaemon(transaction);
         
         // Do something with result...
@@ -99,7 +99,7 @@ public class ClientManager {
     
     public void add(String filePath) {
         
-        Transaction transaction = new Transaction(LiftOpt.ADD, filePath);
+        Transaction transaction = new Transaction(Operation.ADD, filePath);
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
@@ -113,7 +113,7 @@ public class ClientManager {
     }
     
     public void id() {
-        Transaction transaction = new Transaction(LiftOpt.ID, null);
+        Transaction transaction = new Transaction(Operation.ID, null);
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
@@ -124,7 +124,7 @@ public class ClientManager {
     }
     
     public void rm(String fileID) {
-        Transaction transaction = new Transaction(LiftOpt.RM, fileID);
+        Transaction transaction = new Transaction(Operation.RM, fileID);
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
@@ -135,10 +135,18 @@ public class ClientManager {
     }
     
     public void share(String filePath) {
+        Transaction transaction = new Transaction(Operation.SHARE, filePath);
+        Result result           = sendOperationToDaemon(transaction);
+
+        if (result.getReturnCode() == SUCCESS) {
+            System.out.println(result.getResult());
+        } else {
+            System.out.println(result.getMessage());
+        }
     }
     
     public void ufl(String fileID) {
-        Transaction transaction = new Transaction(LiftOpt.UFL, fileID);
+        Transaction transaction = new Transaction(Operation.UFL, fileID);
         Result result           = sendOperationToDaemon(transaction);
 
         if (result.getReturnCode() == SUCCESS) {
@@ -149,7 +157,7 @@ public class ClientManager {
     }
     
     public void version() {
-        Transaction transaction = new Transaction(LiftOpt.VERSION, null);
+        Transaction transaction = new Transaction(Operation.VERSION, null);
         Result result           = sendOperationToDaemon(transaction);
         String[] serverValues   = (String[])result.getResult();
         

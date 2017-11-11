@@ -1,6 +1,6 @@
 package com.lift.client;
 
-import com.lift.common.LiftOpt;
+import com.lift.common.Operation;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,16 +18,16 @@ public class ClientLauncher {
     
     public static void initOptions() {
         
-        commandDescriptions.put(LiftOpt.ADD,      "Add a file to local repository");
-        commandDescriptions.put(LiftOpt.FILES,    "List files");
-        commandDescriptions.put(LiftOpt.GET,      "Get the file from remote repository");
-        commandDescriptions.put(LiftOpt.ID,       "Show the user GUID in the network");
-        commandDescriptions.put(LiftOpt.RM,       "Remove a file from local repository");
-        commandDescriptions.put(LiftOpt.SHARE,    "Share a file and generate it's UFL");
-        commandDescriptions.put(LiftOpt.UFL,      "Generate the file's UFL");
-        commandDescriptions.put(LiftOpt.VERSION,  "Show the Lift version information");
+        commandDescriptions.put(Operation.ADD,      "Add a file to local repository");
+        commandDescriptions.put(Operation.FILES,    "List files");
+        commandDescriptions.put(Operation.GET,      "Get the file from remote repository");
+        commandDescriptions.put(Operation.ID,       "Show the user GUID in the network");
+        commandDescriptions.put(Operation.RM,       "Remove a file from local repository");
+        commandDescriptions.put(Operation.SHARE,    "Share a file and generate it's UFL");
+        commandDescriptions.put(Operation.UFL,      "Generate the file's UFL");
+        commandDescriptions.put(Operation.VERSION,  "Show the Lift version information");
         
-        optionDescriptions.put(LiftOpt.HELP,      "Print usage");
+        optionDescriptions.put(Operation.HELP,      "Print usage");
         
     }
 
@@ -43,44 +43,44 @@ public class ClientLauncher {
         
             switch(opt) {
                 
-                case LiftOpt.SHARE:
-                    checkOptArgsNumber(LiftOpt.SHARE, args, 2);
+                case Operation.SHARE:
+                    checkOptArgsNumber(Operation.SHARE, args, 2);
                     client.share(args[1]);
                     break loop;
                 
-                case LiftOpt.FILES:
+                case Operation.FILES:
                     client.files();
                     break loop;
                 
-                case LiftOpt.RM:
-                    checkOptArgsNumber(LiftOpt.RM, args, 2);
+                case Operation.RM:
+                    checkOptArgsNumber(Operation.RM, args, 2);
                     client.rm(args[1]);
                     break loop;
                     
-                case LiftOpt.ADD:
-                    checkOptArgsNumber(LiftOpt.ADD, args, 2);
+                case Operation.ADD:
+                    checkOptArgsNumber(Operation.ADD, args, 2);
                     client.add(args[1]);
                     break loop;
                 
-                case LiftOpt.ID:
+                case Operation.ID:
                     client.id();
                     break loop;
                 
-                case LiftOpt.GET:
-                    checkOptArgsNumber(LiftOpt.GET, args, 2);
+                case Operation.GET:
+                    checkOptArgsNumber(Operation.GET, args, 2);
                     client.get(args[1]);
                     break loop;
                     
-                case LiftOpt.UFL:
-                    checkOptArgsNumber(LiftOpt.UFL, args, 2);
+                case Operation.UFL:
+                    checkOptArgsNumber(Operation.UFL, args, 2);
                     client.ufl(args[1]);
                     break loop;
                 
-                case LiftOpt.VERSION:
+                case Operation.VERSION:
                     client.version();
                     break loop;
                 
-                case LiftOpt.HELP:
+                case Operation.HELP:
                     showUsage();
                     break loop;
                 

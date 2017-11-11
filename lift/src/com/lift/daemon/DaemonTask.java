@@ -1,6 +1,6 @@
 package com.lift.daemon;
 
-import com.lift.common.LiftOpt;
+import com.lift.common.Operation;
 import com.lift.daemon.command.AddCommand;
 import com.lift.daemon.command.FilesCommand;
 import com.lift.daemon.command.IdCommand;
@@ -58,35 +58,35 @@ public class DaemonTask implements Runnable {
         
         switch(transaction.getOperation()){
             
-            case LiftOpt.ADD:
+            case Operation.ADD:
                 command = new AddCommand(transaction.getParameter(), repositoryDB);
                 break;
                 
-            case LiftOpt.FILES:
+            case Operation.FILES:
                 command = new FilesCommand(repositoryDB);
                 break;
                 
-            case LiftOpt.GET:
+            case Operation.GET:
                 //command = new GetCommand(transaction.getParameter());
                 break;    
                 
-            case LiftOpt.ID:
+            case Operation.ID:
                 command = new IdCommand(sessionDB);
                 break;    
                 
-            case LiftOpt.RM:
+            case Operation.RM:
                 command = new RmCommand(transaction.getParameter(), repositoryDB);
                 break;    
                 
-            case LiftOpt.SHARE:
-                //command = new ShareCommand(transaction.getParameter());
+            case Operation.SHARE:
+                command = new ShareCommand(transaction.getParameter(), repositoryDB, sessionDB);
                 break;
                 
-            case LiftOpt.UFL:
+            case Operation.UFL:
                 command = new UflCommand(transaction.getParameter(), repositoryDB, sessionDB);
                 break;    
                 
-            case LiftOpt.VERSION:
+            case Operation.VERSION:
                 command = new VersionCommand();
                 break;    
                               

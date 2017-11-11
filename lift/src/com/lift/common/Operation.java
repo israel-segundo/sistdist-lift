@@ -6,7 +6,7 @@ package com.lift.common;
  * @author Alejandro Garcia
  * @author Israel Segundo
  */
-public class LiftOpt {
+public class Operation {
     public static final String ADD     = "add";
     public static final String FILES   = "files";
     public static final String GET     = "get";

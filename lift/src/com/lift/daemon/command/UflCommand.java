@@ -37,7 +37,7 @@ public class UflCommand implements LiftCommand {
             
         } else {
             
-            System.out.println("[ ERROR ] Repo: Failed to get the UFL. No such ID: " + fileID);
+            System.out.println("[ ERROR ] UFL-CMD: Failed to get the UFL. No such ID: " + fileID);
             result =  new Result(1, "Daemon: Failed to get the UFL. No such ID: " + fileID, null);
         }
         
