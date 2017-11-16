@@ -98,4 +98,19 @@ public class CommonUtility {
         
         return decodedUFL;
     }
+    
+    public static boolean isUFLValid(String ufl) {
+        if (ufl == null) return false;
+        
+        if (ufl.length() != 60) return false;
+        
+        String[] decodedUFL = decodeUFL(ufl.trim());
+        
+        if (decodedUFL != null &&
+            decodedUFL[0].length() != 32 &&
+            decodedUFL[1].length() != 12)
+            return false;
+        
+        return true;
+    }
 }

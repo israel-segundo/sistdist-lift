@@ -22,7 +22,7 @@ public class Daemon {
     private static final File SESSION_FILE_ROUTE     = new File("session.json");
     private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
     public static final String SHARED_DIR_PATH       = "C:\\lift\\shared";
-    private static final File SHARED_DIR_ROUTE       = new File(SHARED_DIR_PATH);
+    public static final File SHARED_DIR_ROUTE        = new File(SHARED_DIR_PATH);
     public static final int SUCCESS                  = 0;
     
     private static RepositoryDAO repositoryDatabase  = null;

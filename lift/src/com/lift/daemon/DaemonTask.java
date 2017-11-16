@@ -3,6 +3,7 @@ package com.lift.daemon;
 import com.lift.common.Operation;
 import com.lift.daemon.command.AddCommand;
 import com.lift.daemon.command.FilesCommand;
+import com.lift.daemon.command.GetCommand;
 import com.lift.daemon.command.IdCommand;
 import com.lift.daemon.command.RmCommand;
 import com.lift.daemon.command.ShareCommand;
@@ -14,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.lift.daemon.command.LiftCommand;
 import com.lift.daemon.command.MetaCommand;
+import com.lift.daemon.command.RetrieveCommand;
 import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
 
@@ -66,7 +68,7 @@ public class DaemonTask implements Runnable {
                 break;
                 
             case Operation.GET:
-                //command = new GetCommand(transaction.getParameter());
+                command = new GetCommand(transaction.getParameter());
                 break;
                 
             case Operation.META:
@@ -74,7 +76,7 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RETRIEVE:
-                //command = new RetrieveCommand(transaction.getParameter());
+                command = new RetrieveCommand(transaction.getParameter(), repositoryDB);
                 break;
                 
             case Operation.ID:

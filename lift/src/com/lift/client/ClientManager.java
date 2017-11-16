@@ -109,9 +109,22 @@ public class ClientManager {
     }
     
     public void get(String ufl) {
-        // Check the UFL is valid first
         
-        
+        if(CommonUtility.isUFLValid(ufl)) {
+
+            Transaction transaction = new Transaction(Operation.GET, ufl);
+            Result result           = sendOperationToDaemon(transaction);
+
+            if(result.getReturnCode() == SUCCESS) {
+                System.out.format("File downloaded to: ", result.getResult());
+            } else {
+                System.out.println(result.getMessage());
+            }
+            
+        } else {
+            System.out.println("Lift: The UFL is invalid. Please provide a valid UFL.");
+        }
+       
     }
     
     public void id() {
