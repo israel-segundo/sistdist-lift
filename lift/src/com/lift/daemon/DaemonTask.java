@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.lift.daemon.command.LiftCommand;
+import com.lift.daemon.command.MetaCommand;
 import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
 
@@ -37,17 +38,15 @@ public class DaemonTask implements Runnable {
             ) 
         {    
             Transaction transaction = (Transaction) in.readObject();
-       
+            System.out.println("[ INFO ] Petition received: " + transaction.getOperation().toUpperCase());
+                
             Result result = attendTransaction(transaction);
             
             out.writeObject(result);
             
-            System.out.println("[ INFO ] " + Thread.currentThread().getName() + ": File sent to client.");
+            System.out.println("[ INFO ] " + Thread.currentThread().getName() + ": Data sent to client.");
             
-        } catch (IOException e) {
-            e.printStackTrace();
-            
-        } catch (ClassNotFoundException ex) {
+        } catch (ClassNotFoundException | IOException ex) {
             Logger.getLogger(DaemonTask.class.getName()).log(Level.SEVERE, null, ex);
         }        
     }
@@ -68,7 +67,15 @@ public class DaemonTask implements Runnable {
                 
             case Operation.GET:
                 //command = new GetCommand(transaction.getParameter());
+                break;
+                
+            case Operation.META:
+                command = new MetaCommand(transaction.getParameter(), repositoryDB);
                 break;    
+                
+            case Operation.RETRIEVE:
+                //command = new RetrieveCommand(transaction.getParameter());
+                break;
                 
             case Operation.ID:
                 command = new IdCommand(sessionDB);

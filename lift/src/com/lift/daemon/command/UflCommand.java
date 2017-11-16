@@ -1,5 +1,6 @@
 package com.lift.daemon.command;
 
+import com.lift.common.CommonUtility;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -28,10 +29,9 @@ public class UflCommand implements LiftCommand {
         
         if(repositoryDatabase.getFilesMap().keySet().contains(fileID)) {
             System.out.println("[ INFO ] UFL-CMD: Generating the UFL for file ID: " + fileID);
-            String decodedUFL = sessionDatabase.getSession().getGUID() + ":" + fileID;
             
-            byte[] e = Base64.getEncoder().encode(decodedUFL.getBytes());
-            ufl = new String(e);
+            ufl = CommonUtility.encodeUFL(sessionDatabase.getSession().getGUID(), fileID);
+            
             System.out.println("[ INFO ] UFL-CMD: The UFL is: " + ufl);
             result = new Result(0, null, ufl);
             

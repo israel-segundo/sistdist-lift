@@ -12,6 +12,7 @@ public class SessionFile {
     private String GUID;
     private String dateJoined;
     private boolean isConnected;
+    private String sharedDirRoute;
     
     public SessionFile() {
         this.GUID = CommonUtility.generateGUID(0, 32);
@@ -25,6 +26,14 @@ public class SessionFile {
     
     public void setDateJoined(String dateJoined) {
         this.dateJoined = dateJoined;
+    }
+    
+    public String getSharedDirRoute() {
+        return this.sharedDirRoute;
+    }
+    
+    public void setSharedDirRoute(String sharedDirRoute) {
+        this.sharedDirRoute = sharedDirRoute;
     }
     
     public boolean getIsConnected() {

@@ -21,6 +21,9 @@ import java.util.concurrent.Executors;
 public class Daemon {
     private static final File SESSION_FILE_ROUTE     = new File("session.json");
     private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
+    public static final String SHARED_DIR_PATH       = "C:\\lift\\shared";
+    private static final File SHARED_DIR_ROUTE       = new File(SHARED_DIR_PATH);
+    public static final int SUCCESS                  = 0;
     
     private static RepositoryDAO repositoryDatabase  = null;
     private static SessionDAO sessionDatabase        = null;
@@ -33,7 +36,7 @@ public class Daemon {
         
         initSession();
         initRepository();
-        
+        initSharedDirectory();
         
         ServerSocket serverSocket;
         ExecutorService service = Executors.newCachedThreadPool();
@@ -43,8 +46,6 @@ public class Daemon {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("[ INFO ] Connection received.");
-                
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
             }
 
@@ -95,11 +96,22 @@ public class Daemon {
     
     private static void initSessionDatabase() {
         sessionDatabase = new SessionDAO(SESSION_FILE_ROUTE);
+        sessionDatabase.getSession().setSharedDirRoute(SHARED_DIR_PATH);
     }
     
     private static void initRepositoryDatabase() {
         System.out.println("[ INFO ] Repository file is: " + REPOSITORY_FILE_ROUTE.getAbsolutePath());
         repositoryDatabase = new RepositoryDAO(REPOSITORY_FILE_ROUTE);
+    }
+    
+    private static void initSharedDirectory() {
+        if (!SHARED_DIR_ROUTE.exists()) {
+            SHARED_DIR_ROUTE.mkdirs();
+        }
+
+        int filesShared = SHARED_DIR_ROUTE.listFiles().length;
+        System.out.println("[ INFO ] Shared directory is: " + SHARED_DIR_ROUTE.getAbsolutePath());
+        System.out.println("[ INFO ] Sharing: " + filesShared + " files.");
     }
     
     private int getFilesSharedCount() {

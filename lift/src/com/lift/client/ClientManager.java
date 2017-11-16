@@ -1,5 +1,6 @@
 package com.lift.client;
 
+import com.lift.common.CommonUtility;
 import com.lift.common.Operation;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -69,24 +70,22 @@ public class ClientManager {
         Transaction transaction = new Transaction(Operation.FILES, null);
         Result result           = sendOperationToDaemon(transaction);
         
-        // Do something with result...
         if(result.getReturnCode() == SUCCESS) {
             
             // TODO: sort the list by date added
             Map<String, RepositoryFile> map = (HashMap<String, RepositoryFile>)result.getResult();
             Set<Map.Entry<String, RepositoryFile>> fileSet = map.entrySet();
-            // TODO: make the output fixed for the size of the longest entry
             StringBuilder sb = new StringBuilder();
 
-            String format = "%-30s%-20s%-20s%-30s%-20s\n";
+            String format = CommonUtility.getFormatForFilesCmd(map);
             sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS") );
 
             fileSet.forEach((entry) -> {
-                String location = entry.getValue().getName();
-                String size = String.valueOf(entry.getValue().getSize());
-                String fileID = entry.getValue().getGUID();
-                String dateAdded = entry.getValue().getDateAdded();
-                String hits = String.valueOf(entry.getValue().getHits());
+                String location     = entry.getValue().getName();
+                String size         = String.valueOf(entry.getValue().getSize());
+                String fileID       = entry.getValue().getGUID();
+                String dateAdded    = entry.getValue().getDateAdded();
+                String hits         = String.valueOf(entry.getValue().getHits());
                 sb.append( String.format(format, location, size, fileID, dateAdded, hits) );
             });
 
@@ -109,7 +108,10 @@ public class ClientManager {
         }
     }
     
-    public void get(String UFL) {
+    public void get(String ufl) {
+        // Check the UFL is valid first
+        
+        
     }
     
     public void id() {

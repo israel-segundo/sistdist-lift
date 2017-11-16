@@ -1,8 +1,13 @@
 package com.lift.common;
 
+import com.lift.daemon.RepositoryFile;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -46,5 +51,51 @@ public class CommonUtility {
     
     public static String generateGUID(int start, int end) {
         return UUID.randomUUID().toString().substring(start, end);
+    }
+    
+    public static String getFormatForFilesCmd(Map<String, RepositoryFile> map) {
+        
+        if(map.isEmpty()) {
+            return "%-30s%-20s%-20s%-30s%-20s\n";
+        }
+        
+        Set<Map.Entry<String, RepositoryFile>> fileSet = map.entrySet();
+        int[] elementLength                            = new int[5];
+        int[] standardLength                           = {30, 20, 20, 30, 20};
+        StringBuilder format                           = new StringBuilder();
+        
+        fileSet.forEach((entry) -> {
+            elementLength[0] = entry.getValue().getName().length();
+            elementLength[1] = String.valueOf(entry.getValue().getSize()).length();
+            elementLength[2] = entry.getValue().getGUID().length();
+            elementLength[3] = entry.getValue().getDateAdded().length();
+            elementLength[4] = String.valueOf(entry.getValue().getHits()).length();
+        });
+        
+        for(int i = 0; i < elementLength.length; i++) {
+            if(elementLength[i] > standardLength[i]) {
+                format.append("%-").append(elementLength[i] + 3).append("s");
+            } else {
+                format.append("%-").append(standardLength[i]).append("s");
+            }
+        }
+        format.append("\n");
+        
+        return format.toString();
+    }
+    
+    public static String encodeUFL(String clientGUID, String fileID) {
+        String decodedUFL = clientGUID + ":" + fileID;
+        byte[] e = Base64.getEncoder().encode(decodedUFL.getBytes());
+        String encodedUFL = new String(e);
+        
+        return encodedUFL;
+    }
+    
+    public static String[] decodeUFL(String ufl) {
+        byte[] decodedBytes = Base64.getDecoder().decode(ufl);
+        String[] decodedUFL = new String(decodedBytes).split(":");
+        
+        return decodedUFL;
     }
 }

@@ -60,6 +60,17 @@ public class RepositoryDAO {
     public void setDatabaseFile(File databaseFile) {
         this.databaseFile = databaseFile;
     }
+    
+    public RepositoryFile getFileByID(String fileID) {
+        RepositoryFile file = null;
+        
+        this.reload();
+        if (filesMap.containsKey(fileID)) {
+            file = filesMap.get(fileID);
+        } 
+        
+        return file;
+    }
 
     public boolean reload() {
         boolean isLoaded = false;
