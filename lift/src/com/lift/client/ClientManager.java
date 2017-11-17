@@ -2,6 +2,8 @@ package com.lift.client;
 
 import com.lift.common.CommonUtility;
 import com.lift.common.Operation;
+import com.lift.common.ProgressBar;
+import com.lift.daemon.DaemonTask;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.Transaction;
@@ -14,6 +16,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -112,17 +116,27 @@ public class ClientManager {
         
         if(CommonUtility.isUFLValid(ufl)) {
 
-            Transaction transaction = new Transaction(Operation.GET, ufl);
-            Result result           = sendOperationToDaemon(transaction);
-
-            if(result.getReturnCode() == SUCCESS) {
-                System.out.format("File downloaded to: ", result.getResult());
+            Transaction metaTransaction = new Transaction(Operation.META, ufl);
+            Result metaResult           = sendOperationToDaemon(metaTransaction);
+            
+            // meta opt
+            // Get the metadata first, then start listening for Daemon UDP(?) updates
+            //long totalSize = (long) result.getResult();
+            //Socket sock = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
+            //receiveDownloadProgressFromDaemon(sock, totalSize);
+            
+            // get op
+            Transaction getTransaction = new Transaction(Operation.GET, ufl);
+            Result getResult           = sendOperationToDaemon(getTransaction);
+            
+            if(getResult.getReturnCode() == SUCCESS) {
+                System.out.format("File downloaded to: ", getResult.getResult());
             } else {
-                System.out.println(result.getMessage());
+                System.out.println(getResult.getMessage());
             }
             
         } else {
-            System.out.println("Lift: The UFL is invalid. Please provide a valid UFL.");
+            System.out.println("The UFL is invalid. Please provide a valid UFL.");
         }
        
     }
@@ -184,5 +198,35 @@ public class ClientManager {
         System.out.printf(" %-15s%s\n", "Version:", serverValues[0]);
         System.out.printf(" %-15s%s\n", "Built:",   serverValues[1]);
         System.out.printf("\n");
+    }
+    
+    public boolean receiveDownloadProgressFromDaemon(Socket sock, int totalDataSize) {
+        boolean isErrorPresent = false;
+        int delta              = 0;
+        ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
+        
+        while(true) {
+            try (
+                ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+                ) 
+            {    
+                delta = (int) in.readObject();
+                bar.updateProgress(delta);
+                
+                if (delta >= totalDataSize) {
+                    System.out.printf("\n\nDownload is complete.\n");
+                    break;
+                }
+
+            } catch (ClassNotFoundException | IOException ex) {
+                isErrorPresent = true;
+                System.out.printf("\n\nError: The connection was interrupted.\n");
+                Logger.getLogger(DaemonTask.class.getName()).log(Level.SEVERE, null, ex);
+                break;
+            }  
+        }
+        
+        return isErrorPresent;
     }
 }

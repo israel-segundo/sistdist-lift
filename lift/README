@@ -2,9 +2,7 @@ Things TO DO:
 
 - Make a logger for both Client and Daemon:
     a) Move [ INFO ] messages to log file
-- Make a progress bar to be used in GET command for file transfer
 - Get command
-- Retrieve command
 - Server:
     a)  Script for cleaning database unused sessions
 - Scripts for quick testing and few scenarios for MR DR to run them

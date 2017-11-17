@@ -13,13 +13,17 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class GetCommand implements LiftCommand {
-    private String ufl = null;
+    private String ufl  = null;
+    private Socket sock = null;
 
-    public GetCommand(String ufl) {
-        this.ufl = ufl;
+    public GetCommand(String ufl, Socket sock) {
+        this.ufl  = ufl;
+        this.sock = sock;
     }
     
     @Override
@@ -37,6 +41,13 @@ public class GetCommand implements LiftCommand {
         Result<RepositoryFile> response = requestMetadataFromClient(hostname, port, fileID);
         
         if(response.getReturnCode() == Daemon.SUCCESS) {
+            // Send back to client the metadata
+            try (ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());) 
+            {
+                out.writeObject(response);
+            } catch (IOException ex) {
+                Logger.getLogger(GetCommand.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             RepositoryFile fileMetadata = response.getResult();
             // Workaround to get the filename regarding of filesystem:

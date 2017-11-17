@@ -68,7 +68,7 @@ public class DaemonTask implements Runnable {
                 break;
                 
             case Operation.GET:
-                command = new GetCommand(transaction.getParameter());
+                command = new GetCommand(transaction.getParameter(), sock);
                 break;
                 
             case Operation.META:
