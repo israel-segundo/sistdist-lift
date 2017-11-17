@@ -18,12 +18,14 @@ import java.util.logging.Logger;
 
 
 public class GetCommand implements LiftCommand {
-    private String ufl  = null;
-    private Socket sock = null;
+    private String ufl                = null;
+    private Socket localSock          = null;
+    private boolean isReadyToTransfer = false;
+    private long totalBytes           = 0;
 
     public GetCommand(String ufl, Socket sock) {
         this.ufl  = ufl;
-        this.sock = sock;
+        this.localSock = sock;
     }
     
     @Override
@@ -38,52 +40,59 @@ public class GetCommand implements LiftCommand {
         String hostname     = "HARDCODED";
         int port            = 51223;
         
-        Result<RepositoryFile> response = requestMetadataFromClient(hostname, port, fileID);
+        Result<RepositoryFile> metadataResponse = executeMetaInRemoteClient(hostname, port, fileID);
         
-        if(response.getReturnCode() == Daemon.SUCCESS) {
-            // Send back to client the metadata
-            try (ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());) 
-            {
-                out.writeObject(response);
-            } catch (IOException ex) {
-                Logger.getLogger(GetCommand.class.getName()).log(Level.SEVERE, null, ex);
+        try (ObjectOutputStream out = new ObjectOutputStream(localSock.getOutputStream());) 
+        {
+            if(isReadyToTransfer) {
+                // Send back to client the metadata
+                out.writeObject(metadataResponse);
+             
+                RepositoryFile fileMetadata = metadataResponse.getResult();
+                totalBytes = fileMetadata.getSize();
+                // Workaround to get the filename regarding of filesystem:
+                String[] originalFileLocation = fileMetadata.getName().replaceAll("/", "#").replaceAll("\\", "#").split("#");
+                // This might cause NPE issues:
+                String fileName = originalFileLocation[originalFileLocation.length - 1];
+
+                result = executeRetrieveInRemoteClient(hostname, port, fileID, fileName, localSock);
+                
+            } else {
+                result.setReturnCode(1);
+                result.setMessage(metadataResponse.getMessage());
+                
+                return result;
             }
-            
-            RepositoryFile fileMetadata = response.getResult();
-            // Workaround to get the filename regarding of filesystem:
-            String[] originalFileLocation = fileMetadata.getName().replaceAll("/", "#").replaceAll("\\", "#").split("#");
-            // This might cause NPE issues:
-            String fileName = originalFileLocation[originalFileLocation.length - 1];
-            
-            result = requestFileFromClient(hostname, port, fileID, fileName);
-            
-            
-        } else {
-            result.setReturnCode(1);
-            result.setMessage("Daemon: Could not retrieve the file metadata. File might not be available.");
+        } catch (IOException ex) {
+            Logger.getLogger(GetCommand.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
         
         return result;
     }
     
     // TODO: Can we refactor this method with the one in ClientManager?
-    public Result requestMetadataFromClient(String hostname, int port, String fileID) {
+    public Result executeMetaInRemoteClient(String hostname, int port, String fileID) {
         Result result = new Result();
         
         try (Socket sock = new Socket(hostname, port);
-                ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+             ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
         ) {
-                Transaction transaction = new Transaction(Operation.META, fileID);
-                System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
+            Transaction transaction = new Transaction(Operation.META, fileID);
+            System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
 
-                // Send
-                out.writeObject(transaction);
-                
-                // Wait and Receive Result
-                result = (Result) in.readObject();
+            // Send
+            out.writeObject(transaction);
 
-                System.out.println("[ INFO ] Received result from client: " + result);
+            // Wait and Receive Result
+            result = (Result) in.readObject();
+
+            if (result.getReturnCode() == Daemon.SUCCESS) {
+                isReadyToTransfer = true;
+            }
+           
+            System.out.println("[ INFO ] Received result from client: " + result);
                 
 
         } catch (UnknownHostException e) {
@@ -98,31 +107,48 @@ public class GetCommand implements LiftCommand {
     }
     
     // TODO: Can we refactor this method with the one in ClientManager?
-    public Result requestFileFromClient(String hostname, int port, String fileID, String fileName) {
+    public Result executeRetrieveInRemoteClient(String hostname, int port, String fileID, String fileName, Socket localSock) {
         Result result       = new Result();
         boolean isFileSaved = false;
+        long current        = 0;
         
-        try (Socket sock = new Socket(hostname, port);
-             ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(sock.getInputStream());) {
+        try (Socket remoteSock            = new Socket(hostname, port);
+             ObjectOutputStream localOut  = new ObjectOutputStream(localSock.getOutputStream());
+             ObjectOutputStream remoteOut = new ObjectOutputStream(remoteSock.getOutputStream());
+             ObjectInputStream remoteIn   = new ObjectInputStream(remoteSock.getInputStream());
+        ) {
             
             Transaction transaction = new Transaction(Operation.RETRIEVE, fileID);
             System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
 
-            // Send
-            out.writeObject(transaction);
+            // Send the RETRIEVE operation to notify remote client to send bytes of data
+            remoteOut.writeObject(transaction);
             
-            // Wait and Receive Result
-            result = (Result) in.readObject();
             
-            if(result.getReturnCode() != Daemon.SUCCESS) {
-                return result;
-            }
+            // Read actual bytes from remote client
+            byte[] buffer = new byte[1024_000]; // 100 kb
+            int length;            
+            File writeLocation = new File(Daemon.SHARED_DIR_ROUTE.getAbsolutePath() + File.pathSeparator + fileName);
+            FileOutputStream fos = new FileOutputStream(writeLocation);
             
-            byte[] data  = (byte[]) result.getResult();
             
-            System.out.println("[ INFO ] Received from client [" + hostname + "] " + data.length + " bytes.");
-            isFileSaved = writeFile(data, fileName);
+            while (current != totalBytes && (length = remoteIn.read(buffer)) > 0){
+                // report to client launcher the bytes read for progress bar
+                current = current + length;
+                localOut.writeLong(current);
+                
+                System.out.println("[ INFO ] Received from client [" + hostname + "] " + length + " bytes.");
+                
+    	    	// write buffer to file here...
+                try {
+                    fos.write(buffer, 0, length);
+                    isFileSaved = true;
+                } catch (IOException e) {
+                    isFileSaved = false;
+                    break;
+                }
+                
+    	    }
             
             if (isFileSaved) {
                 result.setReturnCode(0);
@@ -136,26 +162,9 @@ public class GetCommand implements LiftCommand {
             System.out.println("[ ERROR ] Can not connect to Lift client at [" + hostname + ":" + port + "]");
             result.setReturnCode(2);
             result.setMessage("Daemon: Can not connect to Lift client at [" + hostname + ":" + port + "]. Client might not be available.");
-        } catch (ClassNotFoundException e) {
-            System.out.println("[ ERROR ] ClassNotFoundException found!");
-        }            
+        } 
         
         return result;
     }
     
-    public static boolean writeFile(byte[] data, String fileName) {
-        boolean isFileSaved  = false;
-        FileOutputStream fos = null;
-        File writeLocation   = new File(Daemon.SHARED_DIR_ROUTE.getAbsolutePath() + File.pathSeparator + fileName);
-        try {
-            fos = new FileOutputStream(writeLocation);
-            fos.write(data);
-            fos.close();
-            isFileSaved = true;
-        } catch (IOException e) {
-            isFileSaved = false;
-        }
-        
-        return isFileSaved;
-    }
 }

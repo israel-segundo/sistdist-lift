@@ -43,8 +43,8 @@ public class ClientManager {
         System.out.println("[ INFO ] Trying to establish a connection to the daemon ");
 
         try (Socket sock = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
-                ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+             ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
         ) {
                 // Send
                 out.writeObject(transaction);
@@ -114,31 +114,31 @@ public class ClientManager {
     
     public void get(String ufl) {
         
-        if(CommonUtility.isUFLValid(ufl)) {
-
-            Transaction metaTransaction = new Transaction(Operation.META, ufl);
-            Result metaResult           = sendOperationToDaemon(metaTransaction);
-            
-            // meta opt
-            // Get the metadata first, then start listening for Daemon UDP(?) updates
-            //long totalSize = (long) result.getResult();
-            //Socket sock = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
-            //receiveDownloadProgressFromDaemon(sock, totalSize);
-            
-            // get op
-            Transaction getTransaction = new Transaction(Operation.GET, ufl);
-            Result getResult           = sendOperationToDaemon(getTransaction);
-            
-            if(getResult.getReturnCode() == SUCCESS) {
-                System.out.format("File downloaded to: ", getResult.getResult());
-            } else {
-                System.out.println(getResult.getMessage());
-            }
-            
-        } else {
+        if(! CommonUtility.isUFLValid(ufl)) {
             System.out.println("The UFL is invalid. Please provide a valid UFL.");
+            return;
         }
-       
+
+        Transaction transaction = new Transaction(Operation.GET, ufl);
+        Result metadata = sendOperationToDaemon(transaction);
+
+        if (metadata.getReturnCode() != SUCCESS) {
+            System.out.println(metadata.getMessage());
+            return;
+        }
+
+        RepositoryFile file = (RepositoryFile) metadata.getResult();
+        long totalSize = file.getSize();
+
+        boolean isSuccessful = readDownloadProgressFromDaemon(totalSize);
+
+
+//        if (isSuccessful) {
+//            System.out.format("File downloaded to: ", getResult.getResult());
+//        } else {
+//            System.out.println(getResult.getMessage());
+//        }
+
     }
     
     public void id() {
@@ -200,18 +200,18 @@ public class ClientManager {
         System.out.printf("\n");
     }
     
-    public boolean receiveDownloadProgressFromDaemon(Socket sock, int totalDataSize) {
+    public boolean readDownloadProgressFromDaemon(long totalDataSize) {
         boolean isErrorPresent = false;
-        int delta              = 0;
+        long delta             = 0;
         ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
         
         while(true) {
-            try (
-                ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+            try (Socket sock            = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
+                 ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+                 ObjectInputStream in   = new ObjectInputStream(sock.getInputStream());
                 ) 
             {    
-                delta = (int) in.readObject();
+                delta = in.readLong();
                 bar.updateProgress(delta);
                 
                 if (delta >= totalDataSize) {
@@ -219,10 +219,9 @@ public class ClientManager {
                     break;
                 }
 
-            } catch (ClassNotFoundException | IOException ex) {
+            } catch (IOException ex) {
                 isErrorPresent = true;
                 System.out.printf("\n\nError: The connection was interrupted.\n");
-                Logger.getLogger(DaemonTask.class.getName()).log(Level.SEVERE, null, ex);
                 break;
             }  
         }

@@ -10,7 +10,7 @@ public class ProgressBar {
     private double current;
     private String operation;
     
-    public ProgressBar(int totalSize, String operation) {
+    public ProgressBar(long totalSize, String operation) {
         this.totalSize = totalSize;
         this.square = totalSize / BAR_LENGTH;
         this.current = 0;

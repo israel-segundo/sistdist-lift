@@ -3,70 +3,61 @@ package com.lift.daemon.command;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class RetrieveCommand implements LiftCommand {
     
     private String fileID                    = null;
     private RepositoryDAO repositoryDatabase = null;
+    private Socket sock                      = null;
 
-    public RetrieveCommand(String fileID, RepositoryDAO repositoryDatabase) {
-        this.fileID = fileID;
+    public RetrieveCommand(String fileID, RepositoryDAO repositoryDatabase, Socket sock) {
+        this.fileID             = fileID;
         this.repositoryDatabase = repositoryDatabase;
+        this.sock               = sock;
     }
 
     @Override
     public Result execute() {
         Result result = new Result();
-        byte[] data = null;
+        byte[] buffer = new byte[1024_000];
         
-        RepositoryFile file = repositoryDatabase.getFileByID(fileID);
         
-        // Check if file is shared
-        if(file == null) {
-            // File is not in repo, and therefore not shared.
+        RepositoryFile repoFile = repositoryDatabase.getFileByID(fileID);
+        String fileName         = repoFile.getName();
+    	File file               = new File(fileName);
+        
+        try (ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream()))
+        {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            BufferedInputStream bis         = new BufferedInputStream(fileInputStream);
+            int length;
+    	    while ((length = bis.read(buffer)) > 0){
+    	    	out.write(buffer, 0, length);
+    	    }
+            
+            bis.close();
+            fileInputStream.close();
+            
+        } catch (IOException e) {
+            System.out.println("[ ERROR ] Could not read the requested file: " + fileName);
             result.setReturnCode(1);
-            result.setMessage("Daemon: Could not retrieve the file. The file is no longer being shared.");
-            
-            return result;
+            result.setMessage("Daemon: Could not read the file from client location.");
         }
         
-        // Check if file exists
-        String fileName = file.getName();
-        File fileShared = new File(fileName);
         
-        if(! fileShared.exists()) {
-            result.setReturnCode(2);
-            result.setMessage("Daemon: Could not retrieve the file. The file is no longer available.");
-            
-            return result;
-        }
-        
-        result = readFile(fileName);
         
         return result;
     }
     
-    public static Result<byte[]> readFile(String filename) {
-        Result result = new Result();
-    	File file     = new File(filename);   
-        byte[] b      = new byte[(int) file.length()];
-        try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            fileInputStream.read(b);
-            
-            result.setReturnCode(0);
-            result.setResult(b);
-         } catch (IOException e1) {
-              System.out.println("[ ERROR ] Could not read the requested file: " + filename);
-              result.setReturnCode(1);
-              result.setMessage("Daemon: Could not read the file from client location.");
-         }
-        
-        return result;
-    }
 }
