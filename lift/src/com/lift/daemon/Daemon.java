@@ -54,9 +54,10 @@ public class Daemon {
             sessionDatabase.getSession().setDaemonPort(portNumber);
             sessionDatabase.commit();
             
+            logger.info(String.format("Daemon listening on port: [%d]", portNumber));
+                
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                logger.info(String.format("Daemon listening on port [%d]", portNumber));
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
             }
 

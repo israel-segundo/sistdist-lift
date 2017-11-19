@@ -65,15 +65,20 @@ public class CommonUtility {
         StringBuilder format                           = new StringBuilder();
         
         fileSet.forEach((entry) -> {
-            elementLength[0] = entry.getValue().getName().length();
-            elementLength[1] = String.valueOf(entry.getValue().getSize()).length();
-            elementLength[2] = entry.getValue().getGUID().length();
-            elementLength[3] = entry.getValue().getDateAdded().length();
-            elementLength[4] = String.valueOf(entry.getValue().getHits()).length();
+            int nameLen = entry.getValue().getName().length();
+            elementLength[0] = (elementLength[0] > nameLen) ? elementLength[0] : nameLen;
+            int sizeLen = String.valueOf(entry.getValue().getSize()).length();
+            elementLength[1] = (elementLength[1] > sizeLen) ? elementLength[1] : sizeLen;
+            int GUIDLen = entry.getValue().getGUID().length();
+            elementLength[2] = (elementLength[2] > GUIDLen) ? elementLength[2] : GUIDLen;
+            int dateLen = entry.getValue().getDateAdded().length();
+            elementLength[3] = (elementLength[3] > dateLen) ? elementLength[3] : dateLen;
+            int hitsLen = String.valueOf(entry.getValue().getHits()).length();
+            elementLength[4] = (elementLength[4] > hitsLen) ? elementLength[4] : hitsLen;
         });
         
         for(int i = 0; i < elementLength.length; i++) {
-            if(elementLength[i] > standardLength[i]) {
+            if(elementLength[i] >= standardLength[i]) {
                 format.append("%-").append(elementLength[i] + 3).append("s");
             } else {
                 format.append("%-").append(standardLength[i]).append("s");
