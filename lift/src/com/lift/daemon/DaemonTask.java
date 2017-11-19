@@ -14,12 +14,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import com.lift.daemon.command.LiftCommand;
 import com.lift.daemon.command.MetaCommand;
+import com.lift.daemon.command.RetrieveCommand;
 import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
 
 public class DaemonTask implements Runnable {
     
-    private static final Logger logger  = new com.lift.common.Logger(DaemonTask.class);
+    private static final Logger logger  = new Logger(DaemonTask.class);
     
     Socket sock;
     RepositoryDAO repositoryDB;
@@ -49,7 +50,7 @@ public class DaemonTask implements Runnable {
             logger.info(Thread.currentThread().getName() + ": Data sent to client.");
             
         } catch (ClassNotFoundException | IOException ex) {
-            logger.error("Could not cast to transaction");
+            logger.error("Could not process the petition received from client.");
         }        
     }
     
@@ -96,7 +97,7 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RETRIEVE:
-                //command = new RetrieveCommand(firstParameter, repositoryDB);
+                command = new RetrieveCommand(firstParameter, repositoryDB, sock);
                 break;
                 
             case Operation.ID:

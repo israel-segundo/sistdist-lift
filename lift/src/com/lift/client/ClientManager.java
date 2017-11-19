@@ -55,7 +55,7 @@ public class ClientManager {
     
     private void loadSession(){
         
-        logger.info("Loading session from disk ...");
+        logger.info("Loading session from disk...");
         String liftConfigLocation   = appConfig.getProperty("lift.config.dir", System.getProperty("java.io.tmpdir"));
         String sessionFileLocation  = liftConfigLocation + File.separator + "session.json";
 
@@ -74,7 +74,7 @@ public class ClientManager {
         }catch(Exception ex){
 
             logger.error("Error at loading session database");
-            ex.printStackTrace();
+            
         }
     }
     

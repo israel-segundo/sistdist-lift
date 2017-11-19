@@ -74,9 +74,9 @@ public class GetCommand {
     public Result executeMetaInRemoteClient(String hostname, int port, String fileID) {
         Result result = new Result();
         
-        try (Socket sock = new Socket(hostname, port);
+        try (Socket sock            = new Socket(hostname, port);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+             ObjectInputStream in   = new ObjectInputStream(sock.getInputStream());
         ) {
             Transaction transaction = new Transaction(Operation.META, new String[]{fileID});
             logger.info("Trying to establish a connection to the client: " + hostname + ":" + port);
@@ -127,7 +127,7 @@ public class GetCommand {
             // Read actual bytes from remote client
             byte[] buffer = new byte[1024_000]; // 100 kb
             int length;            
-            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
+            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.separator + fileName);
             FileOutputStream fos = new FileOutputStream(writeLocation);
             
             
@@ -135,13 +135,13 @@ public class GetCommand {
                 // report to client launcher the bytes read for progress bar
                 current = current + length;
                 
-                if( null != localSock && localSock.isConnected()){
+                if(localSock.isConnected()){
                     localOut.writeLong(current);
                 }
                 
                 logger.info("Received from client [" + hostname + "] " + length + " bytes.");
                 
-    	    	// write buffer to file here...
+    	    	// write buffer to filesystem here...
                 try {
                     fos.write(buffer, 0, length);
                     isFileSaved = true;
@@ -157,13 +157,14 @@ public class GetCommand {
                 result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
             } else {
                 result.setReturnCode(1);
-                result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName + " could not be saved.");
+                result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() +
+                        File.pathSeparator + fileName + " could not be saved.");
             }
             
         } catch (IOException e) {
-            logger.error("Can not connect to Lift client at [" + hostname + ":" + port + "]");
+            logger.error("Can not connect to remote Lift client at [" + hostname + ":" + port + "]");
             result.setReturnCode(2);
-            result.setMessage("Daemon: Can not connect to Lift client at [" + hostname + ":" + port + "]. Client might not be available.");
+            result.setMessage("Daemon: Can not connect to remote Lift client. Client might not be available.");
         } 
         
         return result;

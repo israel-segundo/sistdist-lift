@@ -1,6 +1,5 @@
 package com.lift.daemon;
 
-import com.lift.client.ClientManager;
 import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
@@ -8,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,19 +50,19 @@ public class Daemon {
 
         try {
             serverSocket = new ServerSocket(portNumber);
-            
-            sessionDatabase.getSession().setDaemonPort(serverSocket.getLocalPort());
+            portNumber = serverSocket.getLocalPort();
+            sessionDatabase.getSession().setDaemonPort(portNumber);
             sessionDatabase.commit();
             
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                logger.info(String.format("Daemon listening on port %d", portNumber));
+                logger.info(String.format("Daemon listening on port [%d]", portNumber));
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
             }
 
         } catch (IOException e) {
-            logger.error(String.format("[ ERROR ] Exception caught when trying to listen "
-                    + "on port %d  or listening for a connection",portNumber));
+            logger.error(String.format("Exception caught when trying to listen "
+                    + "on port %d  or listening for a connection", portNumber));
             logger.error(e.getMessage());
         }    
     }
@@ -103,6 +101,7 @@ public class Daemon {
             // Load session from file
             sessionDatabase.reload();
             guid = sessionDatabase.getSession().getGUID();
+            portNumber = sessionDatabase.getSession().getDaemonPort();
                         
         } else {
             // TODO: Connect to server...
