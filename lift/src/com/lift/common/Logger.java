@@ -17,8 +17,8 @@ public class Logger {
     public static final String ANSI_WHITE = "\u001B[37m";
 
     private final String ERROR = ANSI_RED + "ERROR" + ANSI_RESET;
-    private final String INFO  = ANSI_WHITE + "INFO" + ANSI_RESET;
-    private final String WARN  = ANSI_YELLOW + "WARN" + ANSI_RESET;
+    private final String INFO  = ANSI_WHITE + "INFO " + ANSI_RESET;
+    private final String WARN  = ANSI_YELLOW + "WARN " + ANSI_RESET;
     
     private Class sourceClass = null;
     
@@ -50,6 +50,6 @@ public class Logger {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentTime = sdf.format(date);        
         
-        System.out.println(String.format("%s %-10s %-20s: %s", currentTime, "[" + type + "]", sourceClass.getSimpleName() , message));
+        System.out.println(String.format("%s - %-10s : %-15s - %s", currentTime, type, sourceClass.getSimpleName() , message));
     }
 }

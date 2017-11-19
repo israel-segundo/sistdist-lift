@@ -1,5 +1,6 @@
 package com.lift.daemon;
 
+import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.daemon.command.AddCommand;
 import com.lift.daemon.command.FilesCommand;
@@ -11,8 +12,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import com.lift.daemon.command.LiftCommand;
 import com.lift.daemon.command.MetaCommand;
 import com.lift.daemon.command.RetrieveCommand;
@@ -20,6 +19,8 @@ import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
 
 public class DaemonTask implements Runnable {
+    
+    private static final Logger logger  = new Logger(DaemonTask.class);
     
     Socket sock;
     RepositoryDAO repositoryDB;
@@ -40,16 +41,16 @@ public class DaemonTask implements Runnable {
             ) 
         {    
             Transaction transaction = (Transaction) in.readObject();
-            System.out.println("[ INFO ] Petition received: " + transaction.getOperation().toUpperCase());
+            logger.info("Petition received: " + transaction.getOperation().toUpperCase());
                 
             Result result = attendTransaction(transaction);
             
             out.writeObject(result);
             
-            System.out.println("[ INFO ] " + Thread.currentThread().getName() + ": Data sent to client.");
+            logger.info(Thread.currentThread().getName() + ": Data sent to client.");
             
         } catch (ClassNotFoundException | IOException ex) {
-            Logger.getLogger(DaemonTask.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Could not process the petition received from client.");
         }        
     }
     
@@ -81,7 +82,7 @@ public class DaemonTask implements Runnable {
                 
             case Operation.GET:
                 
-                if(null!=transaction && null!= transaction.getParameters()){
+                if(null != transaction && null != transaction.getParameters()){
                     
                     String ufl           = parameters[0];
                     String metadataJson  = parameters[1];
@@ -96,7 +97,7 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RETRIEVE:
-                //command = new RetrieveCommand(firstParameter, repositoryDB);
+                command = new RetrieveCommand(firstParameter, repositoryDB, sock);
                 break;
                 
             case Operation.ID:

@@ -1,5 +1,6 @@
 package com.lift.daemon.command;
 
+import com.lift.common.Logger;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -11,11 +12,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class RetrieveCommand implements LiftCommand {
+    
+    private static final Logger logger  = new Logger(RetrieveCommand.class);
     
     private String fileID                    = null;
     private RepositoryDAO repositoryDatabase = null;
@@ -50,7 +51,7 @@ public class RetrieveCommand implements LiftCommand {
             fileInputStream.close();
             
         } catch (IOException e) {
-            System.out.println("[ ERROR ] Could not read the requested file: " + fileName);
+            logger.error("Could not read the requested file: " + fileName);
             result.setReturnCode(1);
             result.setMessage("Daemon: Could not read the file from client location.");
         }

@@ -24,7 +24,7 @@ public class ProgressBar {
         String readableDelta = CommonUtility.humanReadableByteCount(delta, false);
         String readableTotal = CommonUtility.humanReadableByteCount(totalSize, false);
         
-        System.out.printf("%s:  [%-" + BAR_LENGTH + "s]  %10s / %-10s\r", operation, progress, readableDelta, readableTotal);
+        System.out.printf("%s:  [%-" + BAR_LENGTH + "s]  %12s / %-12s\r", operation, progress, readableDelta, readableTotal);
 
         return delta < totalSize;
     }

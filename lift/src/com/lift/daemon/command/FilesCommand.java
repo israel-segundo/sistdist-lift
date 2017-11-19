@@ -1,6 +1,7 @@
 
 package com.lift.daemon.command;
 
+import com.lift.common.Logger;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.Result;
 
@@ -9,8 +10,10 @@ import com.lift.daemon.Result;
  *  List all files in local repository
  */
 public class FilesCommand implements LiftCommand{
+    
+    private static final Logger logger  = new Logger(FilesCommand.class);
 
-    private RepositoryDAO repositoryDatabase         = null;
+    private RepositoryDAO repositoryDatabase = null;
   
     public FilesCommand(RepositoryDAO repositoryDatabase){
         this.repositoryDatabase = repositoryDatabase;
@@ -19,7 +22,7 @@ public class FilesCommand implements LiftCommand{
     @Override
     public Result execute() {
         
-        System.out.println("[ INFO ] FILES-CMD: Listing files in local repo...");
+        logger.info("Listing files in local repo...");
 
         boolean isDatabaseLoaded = repositoryDatabase.reload();
         Result result = new Result();

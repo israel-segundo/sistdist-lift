@@ -1,6 +1,7 @@
 package com.lift.daemon.command;
 
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -10,6 +11,8 @@ import java.util.Base64;
 
 public class ShareCommand implements LiftCommand {
 
+    private static final Logger logger  = new Logger(ShareCommand.class);
+    
     private RepositoryDAO repositoryDatabase  = null;
     private SessionDAO sessionDatabase        = null;
     private String filePath                   = null;
@@ -31,10 +34,10 @@ public class ShareCommand implements LiftCommand {
         RepositoryFile repoFile = null;
         
         
-        System.out.println("[ INFO ] SHARE-CMD: Adding file [" + filePath + "] to repo...");
+        logger.info("Adding file [" + filePath + "] to repo...");
         
         if(!file.exists()) {
-            System.out.println("[ INFO ] SHARE-CMD: File [" + filePath + "] does not exist.");
+            logger.info("File [" + filePath + "] does not exist.");
             return new Result(1, "Daemon: Could not add the file to repository. No such file: " + filePath, null);
             
         } else {
@@ -45,7 +48,7 @@ public class ShareCommand implements LiftCommand {
             
             // Check if the file has already been added
             if(repositoryDatabase.getFilesMap().containsKey(fileID)) {
-                System.out.println("[ INFO ] SHARE-CMD: File [" + filePath + "] is already in repo.");
+                logger.info("File [" + filePath + "] is already in repo.");
                 return new Result(2, "Daemon: The file is already in repository.", null);
             }
             
@@ -59,12 +62,12 @@ public class ShareCommand implements LiftCommand {
         
         if(isFileAdded) {
             fileID = repoFile.getGUID();
-            System.out.println("[ INFO ] SHARE-CMD: Generating the UFL for file ID: " + fileID);
+            logger.info("Generating the UFL for file ID: " + fileID);
             String decodedUFL = sessionDatabase.getSession().getGUID() + ":" + fileID;
             
             byte[] e = Base64.getEncoder().encode(decodedUFL.getBytes());
             ufl = new String(e);
-            System.out.println("[ INFO ] SHARE-CMD: The UFL is: " + ufl);
+            logger.info("The UFL is: " + ufl);
             result = new Result(0, null, ufl);
         } else {
             result.setMessage("Daemon: Error when saving the repository state.");

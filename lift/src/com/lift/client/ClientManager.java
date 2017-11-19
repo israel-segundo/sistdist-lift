@@ -1,6 +1,6 @@
 package com.lift.client;
 
-import com.lift.common.ApplicationConfiguration;
+import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
@@ -15,10 +15,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -36,7 +41,7 @@ public class ClientManager {
     private static String daemonHostname        = "localhost";
     private static SessionDAO sessionDatabase   = null;
     
-    private ApplicationConfiguration appConfig  = null;
+    private AppConfig appConfig  = null;
     
     public ClientManager() {
         
@@ -46,7 +51,7 @@ public class ClientManager {
     
     private void loadConfig(){
     
-        appConfig = new ApplicationConfiguration();
+        appConfig = new AppConfig();
         
         clientVersion   = appConfig.getProperty("lift.build.version", clientVersion);
         daemonHostname  = appConfig.getProperty("lift.daemon.hostname", daemonHostname);
@@ -55,9 +60,9 @@ public class ClientManager {
     
     private void loadSession(){
         
-        logger.info("Loading session from disk ...");
-        String liftConfigLocation   = System.getProperty("lift.cfg.dir", System.getProperty("java.io.tmpdir"));
-        String sessionFileLocation  =  liftConfigLocation + File.pathSeparator + "session.json";
+        logger.info("Loading session from disk...");
+        String liftConfigLocation   = appConfig.getProperty("lift.config.dir", System.getProperty("java.io.tmpdir"));
+        String sessionFileLocation  = liftConfigLocation + File.separator + "session.json";
 
         try{
             
@@ -73,8 +78,8 @@ public class ClientManager {
             
         }catch(Exception ex){
 
-            logger.error("Error at loading session database ");
-            ex.printStackTrace();
+            logger.error("Error at loading session database");
+            
         }
     }
     
@@ -82,7 +87,7 @@ public class ClientManager {
         
         Result result = null;
 
-        logger.info(" Trying to establish a connection to the daemon ");
+        logger.info("Trying to establish a connection to the daemon");
 
         try (Socket sock = new Socket(daemonHostname, daemonPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
@@ -94,16 +99,16 @@ public class ClientManager {
                 // Wait and Receive Result
                 result = (Result) in.readObject();
 
-                logger.info(" Received result from daemon: " + result);
+                logger.info("Received result from daemon: " + result);
                 
         } catch (UnknownHostException e) {
-                logger.error(" Don't know about host " + daemonHostname);
+                logger.error("Don't know about host " + daemonHostname);
                 System.exit(1);
         } catch (IOException e) {
-                System.err.println("Can not connect to Lift daemon at [" + daemonHostname + "]. Is the Lift daemon running?");
+                System.err.println("Can not connect to Lift daemon at [" + daemonHostname + ":" + daemonPort + "]. Is the Lift daemon running?");
                 System.exit(1);
         } catch (ClassNotFoundException e) {
-                logger.error(" ClassNotFoundException found!");
+                logger.error("ClassNotFoundException found!");
                 System.exit(1);
         }        
         
@@ -124,12 +129,14 @@ public class ClientManager {
 
             String format = CommonUtility.getFormatForFilesCmd(map);
             sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS") );
+            
+            
 
             fileSet.forEach((entry) -> {
                 String location     = entry.getValue().getName();
-                String size         = String.valueOf(entry.getValue().getSize());
+                String size         = CommonUtility.humanReadableByteCount(entry.getValue().getSize(), false);
                 String fileID       = entry.getValue().getGUID();
-                String dateAdded    = entry.getValue().getDateAdded();
+                String dateAdded    = CommonUtility.humanReadableDaysAgo(entry.getValue().getDateAdded());
                 String hits         = String.valueOf(entry.getValue().getHits());
                 sb.append( String.format(format, location, size, fileID, dateAdded, hits) );
             });

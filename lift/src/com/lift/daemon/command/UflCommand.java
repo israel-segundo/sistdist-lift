@@ -1,6 +1,7 @@
 package com.lift.daemon.command;
 
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -9,6 +10,8 @@ import java.util.Base64;
 
 
 public class UflCommand implements LiftCommand {
+    
+    private static final Logger logger  = new Logger(UflCommand.class);
     
     private RepositoryDAO repositoryDatabase  = null;
     private SessionDAO sessionDatabase        = null;
@@ -28,16 +31,16 @@ public class UflCommand implements LiftCommand {
         repositoryDatabase.reload();
         
         if(repositoryDatabase.getFilesMap().keySet().contains(fileID)) {
-            System.out.println("[ INFO ] UFL-CMD: Generating the UFL for file ID: " + fileID);
+            logger.info("Generating the UFL for file ID: " + fileID);
             
             ufl = CommonUtility.encodeUFL(sessionDatabase.getSession().getGUID(), fileID);
             
-            System.out.println("[ INFO ] UFL-CMD: The UFL is: " + ufl);
+            logger.info("The UFL is: " + ufl);
             result = new Result(0, null, ufl);
             
         } else {
             
-            System.out.println("[ ERROR ] UFL-CMD: Failed to get the UFL. No such ID: " + fileID);
+            logger.error("Failed to get the UFL. No such ID: " + fileID);
             result =  new Result(1, "Daemon: Failed to get the UFL. No such ID: " + fileID, null);
         }
         
