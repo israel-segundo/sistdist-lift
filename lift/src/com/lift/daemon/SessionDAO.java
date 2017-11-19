@@ -2,6 +2,8 @@ package com.lift.daemon;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.lift.client.ClientManager;
+import com.lift.common.Logger;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -17,6 +19,9 @@ import java.lang.reflect.Type;
  * @author Israel Segundo
  */
 public class SessionDAO {
+    
+    private static final Logger logger  = new Logger(SessionDAO.class);
+
     private File sessionFile    = null;
     private SessionFile session = null;
     private Gson gson           = null;
@@ -39,32 +44,33 @@ public class SessionDAO {
     }
     
     public void reload() {
-        System.out.println("[ INFO ] Session-Database: Loading session state from file...");
+        logger.info("Session-Database: Loading session state from file...");
         
         try (Reader reader = new FileReader(sessionFile)) {
             
             session = gson.fromJson(reader, type);
             
-            System.out.println("[ INFO ] Session-Database: Session finished loading.");
+            logger.info("Session-Database: Session finished loading.");
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Session-Database: Error when loading the user session.");
+            logger.error("Session-Database: Error when loading the user session.");
         }
     }
     
     public boolean commit() {
         boolean isSaved = false;
-        System.out.println("[ INFO ] Session-Database: Saving session state to file ...");
+        logger.info("Session-Database: Saving session state to file ...");
         
         try (Writer writer = new FileWriter(sessionFile)) {
             
             gson.toJson(session, writer);
             isSaved = true;
-            System.out.println("[ INFO ] Session-Database: Saving session completed.");
+            logger.info("Session-Database: Saving session completed.");
             return isSaved;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Session-Database: Error when saving the user session.");
+            logger.error("Session-Database: Error when saving the user session.");
+            ex.printStackTrace();
             return isSaved;
         }
     }

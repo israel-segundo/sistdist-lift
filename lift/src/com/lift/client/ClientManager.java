@@ -1,12 +1,15 @@
 package com.lift.client;
 
+import com.lift.common.ApplicationConfiguration;
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.common.ProgressBar;
-import com.lift.daemon.DaemonTask;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
+import com.lift.daemon.SessionDAO;
 import com.lift.daemon.Transaction;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -16,8 +19,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -27,22 +28,63 @@ import java.util.logging.Logger;
  */
 public class ClientManager {
     
-    private static final String CLIENT_VERSION    = "1.0.0";
-    private static final String CLIENT_BUILD_DATE = Calendar.getInstance().getTime().toString();
-    private static final int SUCCESS              = 0;
+    private static final Logger logger          = new Logger(ClientManager.class);
+    private static String clientVersion         = "1.0.0";
+    private static String clientBuildDate       = Calendar.getInstance().getTime().toString();
+    private static final int SUCCESS            = 0;
+    private int daemonPort                      = 0;
+    private static String daemonHostname        = "localhost";
+    private static SessionDAO sessionDatabase   = null;
     
-    private static final String SHARED_DIR_ROUTE  = "/scratch/lift/";
-    private static final int DAEMON_PORT          = 45115;
-    private static final String DAEMON_HOSTNAME   = "localhost";
+    private ApplicationConfiguration appConfig  = null;
     
+    public ClientManager() {
+        
+        loadConfig();
+        loadSession();
+    }
+    
+    private void loadConfig(){
+    
+        appConfig = new ApplicationConfiguration();
+        
+        clientVersion   = appConfig.getProperty("lift.build.version", clientVersion);
+        daemonHostname  = appConfig.getProperty("lift.daemon.hostname", daemonHostname);
+        clientBuildDate = appConfig.getProperty("lift.build.date", clientBuildDate);
+    }
+    
+    private void loadSession(){
+        
+        logger.info("Loading session from disk ...");
+        String liftConfigLocation   = System.getProperty("lift.cfg.dir", System.getProperty("java.io.tmpdir"));
+        String sessionFileLocation  =  liftConfigLocation + File.pathSeparator + "session.json";
+
+        try{
+            
+            logger.info("Target session database location: " + sessionFileLocation);
+            
+            sessionDatabase = new SessionDAO(new File(sessionFileLocation));
+            sessionDatabase.reload();
+            
+            logger.info("Session database loaded.");
+            logger.info(appConfig.toString());
+            
+            daemonPort = sessionDatabase.getSession().getDaemonPort();
+            
+        }catch(Exception ex){
+
+            logger.error("Error at loading session database ");
+            ex.printStackTrace();
+        }
+    }
     
     private Result sendOperationToDaemon(Transaction transaction){
         
         Result result = null;
 
-        System.out.println("[ INFO ] Trying to establish a connection to the daemon ");
+        logger.info(" Trying to establish a connection to the daemon ");
 
-        try (Socket sock = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
+        try (Socket sock = new Socket(daemonHostname, daemonPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
         ) {
@@ -52,17 +94,16 @@ public class ClientManager {
                 // Wait and Receive Result
                 result = (Result) in.readObject();
 
-                System.out.println("[ INFO ] Received result from daemon: " + result);
+                logger.info(" Received result from daemon: " + result);
                 
-
         } catch (UnknownHostException e) {
-                System.err.println("[ ERROR ] Don't know about host " + DAEMON_HOSTNAME);
+                logger.error(" Don't know about host " + daemonHostname);
                 System.exit(1);
         } catch (IOException e) {
-                System.err.println("Can not connect to Lift daemon at [" + DAEMON_HOSTNAME + "]. Is the Lift daemon running?");
+                System.err.println("Can not connect to Lift daemon at [" + daemonHostname + "]. Is the Lift daemon running?");
                 System.exit(1);
         } catch (ClassNotFoundException e) {
-                System.err.println("[ ERROR ] ClassNotFoundException found!");
+                logger.error(" ClassNotFoundException found!");
                 System.exit(1);
         }        
         
@@ -135,18 +176,9 @@ public class ClientManager {
         RepositoryFile file = (RepositoryFile) metadata.getResult();
         long totalSize = file.getSize();
 
-        //boolean isSuccessful = readDownloadProgressFromDaemon(totalSize);
-
         // Retrieve file operation
         Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl, file.toJson()});
         Result getTxnResult        = sendOperationToDaemon(getTransaction);
-
-//        if (isSuccessful) {
-//            System.out.format("File downloaded to: ", getResult.getResult());
-//        } else {
-//            System.out.println(getResult.getMessage());
-//        }
-
     }
     
     public void id() {
@@ -200,8 +232,8 @@ public class ClientManager {
         
         System.out.printf("Client:\n");
         String format = " %-15s%s\n";
-        System.out.printf(format, "Version:", CLIENT_VERSION);
-        System.out.printf(format, "Built:",   CLIENT_BUILD_DATE);
+        System.out.printf(format, "Version:", clientVersion);
+        System.out.printf(format, "Built:",   clientBuildDate);
         System.out.printf("\nServer:\n");
         System.out.printf(" %-15s%s\n", "Version:", serverValues[0]);
         System.out.printf(" %-15s%s\n", "Built:",   serverValues[1]);
@@ -217,7 +249,7 @@ public class ClientManager {
         // TODO: Reuse socket obj
         
         while(true) {
-            try (Socket sock            = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);
+            try (Socket sock            = new Socket(daemonHostname, daemonPort);
                  ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
                  ObjectInputStream in   = new ObjectInputStream(sock.getInputStream());
                 ) 

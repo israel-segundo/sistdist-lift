@@ -13,13 +13,23 @@ public class SessionFile {
     private String dateJoined;
     private boolean isConnected;
     private String sharedDirRoute;
+    private int daemonPort;
     
     public SessionFile() {
         this.GUID = CommonUtility.generateGUID(0, 32);
         this.dateJoined = CommonUtility.generateDate();
         this.isConnected = false;
+        this.daemonPort = 0;
     }
-    
+
+    public int getDaemonPort() {
+        return daemonPort;
+    }
+
+    public void setDaemonPort(int daemonPort) {
+        this.daemonPort = daemonPort;
+    }
+   
     public String getGUID() {
         return this.GUID;
     }

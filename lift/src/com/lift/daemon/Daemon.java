@@ -1,6 +1,9 @@
 package com.lift.daemon;
 
+import com.lift.client.ClientManager;
+import com.lift.common.ApplicationConfiguration;
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -19,33 +22,27 @@ import java.util.concurrent.Executors;
  * @author Israel Segundo
  */
 public class Daemon {
-    private static final File SESSION_FILE_ROUTE     = new File("session.json");
-    private static final File REPOSITORY_FILE_ROUTE  = new File("repo.json");
-    public static final String SHARED_DIR_PATH       = "C:\\lift\\shared";
-    public static final File SHARED_DIR_ROUTE        = new File(SHARED_DIR_PATH);
-    public static final int SUCCESS                  = 0;
+       
+    private static final Logger logger  = new Logger(Daemon.class);
+
+    private static File sessionFile     = null;
+    private static File repositoryFile  = null;
+    private static File configDirFile   = null;
+    public static String sharedDirPath  = null;
+    
+    public static File sharedDirFile    = null;
+    public static final int SUCCESS     = 0;
     
     private static RepositoryDAO repositoryDatabase  = null;
     private static SessionDAO sessionDatabase        = null;
     
-    private static final int DEFAULT_PORT_NUMBER     = 45115;
-    private static final String HOSTNAME             = "localhost";    
-    
-    private static int port;
-    
+    private static int portNumber                       = 0;
+    private static ApplicationConfiguration appConfig   = null;
+        
     public static void main(String[] args) {
         
-        port = DEFAULT_PORT_NUMBER;
-
-        if(args.length > 1){
-            
-            try{
-                port = Integer.parseInt(args[0]);
-            } catch(Exception ex){
-                ex.printStackTrace();
-            }
-        }
-        
+        loadConfig();
+        initConfigDirectory();
         initSession();
         initRepository();
         initSharedDirectory();
@@ -54,22 +51,44 @@ public class Daemon {
         ExecutorService service = Executors.newCachedThreadPool();
 
         try {
-            serverSocket = new ServerSocket(port);
-
+            serverSocket = new ServerSocket(portNumber);
+            
+            sessionDatabase.getSession().setDaemonPort(serverSocket.getLocalPort());
+            sessionDatabase.commit();
+            
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println(String.format("Daemon listening on port %d", port));
+                logger.info(String.format("Daemon listening on port %d", portNumber));
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
             }
 
         } catch (IOException e) {
-            System.out.println("[ ERROR ] Exception caught when trying to listen on port "
-                    + port + " or listening for a connection");
-            System.out.println(e.getMessage());
+            logger.error(String.format("[ ERROR ] Exception caught when trying to listen "
+                    + "on port %d  or listening for a connection",portNumber));
+            logger.error(e.getMessage());
         }    
     }
     
     
+    private static void loadConfig(){
+    
+        appConfig = new ApplicationConfiguration();
+        
+        String configDir    = appConfig.getProperty("lift.config.dir");
+        configDirFile       = new File(configDir);
+        
+        String sessionFilePath  = configDir + File.separator + "session.json";        
+        sessionFile             = new File(sessionFilePath);
+        
+        String repoFilePath = configDir + File.separator + "repo.json";
+        repositoryFile      = new File(repoFilePath);
+        
+        String sharedDir    = appConfig.getProperty("lift.shared.dir");
+        sharedDirFile       = new File(sharedDir);
+        
+        
+        
+    }
     
     /*
     *  Private methods
@@ -80,11 +99,11 @@ public class Daemon {
         
         String guid = null;
         
-        if(SESSION_FILE_ROUTE.exists()) {
+        if(sessionFile.exists()) {
             // Load session from file
             sessionDatabase.reload();
             guid = sessionDatabase.getSession().getGUID();
-            
+                        
         } else {
             // TODO: Connect to server...
             // if connect is successful, do below
@@ -99,7 +118,7 @@ public class Daemon {
             sessionDatabase.commit();
         }
         
-        System.out.println("[ INFO ] Session GUID: " + guid);
+        logger.info("Session GUID: " + guid);
     }
     
     private static void initRepository() {
@@ -108,23 +127,37 @@ public class Daemon {
     }
     
     private static void initSessionDatabase() {
-        sessionDatabase = new SessionDAO(SESSION_FILE_ROUTE);
-        sessionDatabase.getSession().setSharedDirRoute(SHARED_DIR_PATH);
+        sessionDatabase = new SessionDAO(sessionFile);
+        sessionDatabase.getSession().setSharedDirRoute(sharedDirPath);
     }
     
     private static void initRepositoryDatabase() {
-        System.out.println("[ INFO ] Repository file is: " + REPOSITORY_FILE_ROUTE.getAbsolutePath());
-        repositoryDatabase = new RepositoryDAO(REPOSITORY_FILE_ROUTE);
+        logger.info("Repository file is: " + repositoryFile.getAbsolutePath());
+        repositoryDatabase = new RepositoryDAO(repositoryFile);
+    }
+    
+    private static void initConfigDirectory() {
+
+        logger.info("Config directory is: " + configDirFile.getAbsolutePath());
+        
+        if (!configDirFile.exists()) {
+            logger.info("Config directory does not exist. Attempting to create");
+            configDirFile.mkdirs();
+        }
+        
+        if(!configDirFile.exists()){
+            logger.error("Config dir does not exist and could not be created.");
+        }
     }
     
     private static void initSharedDirectory() {
-        if (!SHARED_DIR_ROUTE.exists()) {
-            SHARED_DIR_ROUTE.mkdirs();
+        if (!sharedDirFile.exists()) {
+            sharedDirFile.mkdirs();
         }
 
-        int filesShared = SHARED_DIR_ROUTE.listFiles().length;
-        System.out.println("[ INFO ] Shared directory is: " + SHARED_DIR_ROUTE.getAbsolutePath());
-        System.out.println("[ INFO ] Sharing: " + filesShared + " files.");
+        int filesShared = sharedDirFile.listFiles().length;
+        logger.info("Shared directory is: " + sharedDirFile.getAbsolutePath());
+        logger.info("Sharing: " + filesShared + " files.");
     }
     
     private int getFilesSharedCount() {

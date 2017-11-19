@@ -125,7 +125,7 @@ public class GetCommand {
             // Read actual bytes from remote client
             byte[] buffer = new byte[1024_000]; // 100 kb
             int length;            
-            File writeLocation = new File(Daemon.SHARED_DIR_ROUTE.getAbsolutePath() + File.pathSeparator + fileName);
+            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
             FileOutputStream fos = new FileOutputStream(writeLocation);
             
             
@@ -152,10 +152,10 @@ public class GetCommand {
             
             if (isFileSaved) {
                 result.setReturnCode(0);
-                result.setResult(Daemon.SHARED_DIR_ROUTE.getAbsolutePath() + File.pathSeparator + fileName);
+                result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
             } else {
                 result.setReturnCode(1);
-                result.setMessage("Daemon: File " + Daemon.SHARED_DIR_ROUTE.getAbsolutePath() + File.pathSeparator + fileName + " could not be saved.");
+                result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName + " could not be saved.");
             }
             
         } catch (IOException e) {
