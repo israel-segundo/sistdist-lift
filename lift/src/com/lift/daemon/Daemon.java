@@ -1,7 +1,7 @@
 package com.lift.daemon;
 
 import com.lift.client.ClientManager;
-import com.lift.common.ApplicationConfiguration;
+import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import java.io.File;
@@ -36,8 +36,8 @@ public class Daemon {
     private static RepositoryDAO repositoryDatabase  = null;
     private static SessionDAO sessionDatabase        = null;
     
-    private static int portNumber                       = 0;
-    private static ApplicationConfiguration appConfig   = null;
+    private static int portNumber                    = 0;
+    private static AppConfig appConfig               = null;
         
     public static void main(String[] args) {
         
@@ -72,7 +72,7 @@ public class Daemon {
     
     private static void loadConfig(){
     
-        appConfig = new ApplicationConfiguration();
+        appConfig = new AppConfig();
         
         String configDir    = appConfig.getProperty("lift.config.dir");
         configDirFile       = new File(configDir);

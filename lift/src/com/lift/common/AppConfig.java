@@ -9,14 +9,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Properties;
 
-public class ApplicationConfiguration {
+public class AppConfig {
 
-    private static final Logger logger = new Logger(ApplicationConfiguration.class);
+    private static final Logger logger = new Logger(AppConfig.class);
     
     private Properties properties;
     private final String configFilePath = "lift-config.properties";
     
-    public ApplicationConfiguration(){
+    public AppConfig(){
         
         logger.info("Loading properties file.");
         properties = new Properties();
@@ -32,7 +32,7 @@ public class ApplicationConfiguration {
         InputStream input = null;
         
         try{
-            input = ApplicationConfiguration.class.getClassLoader().getResourceAsStream(configFilePath);
+            input = AppConfig.class.getClassLoader().getResourceAsStream(configFilePath);
             logger.info("Input:" + input);
             properties.load(input);
             

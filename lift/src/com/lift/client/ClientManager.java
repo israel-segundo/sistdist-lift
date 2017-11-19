@@ -1,6 +1,6 @@
 package com.lift.client;
 
-import com.lift.common.ApplicationConfiguration;
+import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
@@ -36,7 +36,7 @@ public class ClientManager {
     private static String daemonHostname        = "localhost";
     private static SessionDAO sessionDatabase   = null;
     
-    private ApplicationConfiguration appConfig  = null;
+    private AppConfig appConfig  = null;
     
     public ClientManager() {
         
@@ -46,7 +46,7 @@ public class ClientManager {
     
     private void loadConfig(){
     
-        appConfig = new ApplicationConfiguration();
+        appConfig = new AppConfig();
         
         clientVersion   = appConfig.getProperty("lift.build.version", clientVersion);
         daemonHostname  = appConfig.getProperty("lift.daemon.hostname", daemonHostname);
@@ -56,8 +56,8 @@ public class ClientManager {
     private void loadSession(){
         
         logger.info("Loading session from disk ...");
-        String liftConfigLocation   = System.getProperty("lift.cfg.dir", System.getProperty("java.io.tmpdir"));
-        String sessionFileLocation  =  liftConfigLocation + File.pathSeparator + "session.json";
+        String liftConfigLocation   = appConfig.getProperty("lift.config.dir", System.getProperty("java.io.tmpdir"));
+        String sessionFileLocation  = liftConfigLocation + File.separator + "session.json";
 
         try{
             
@@ -73,7 +73,7 @@ public class ClientManager {
             
         }catch(Exception ex){
 
-            logger.error("Error at loading session database ");
+            logger.error("Error at loading session database");
             ex.printStackTrace();
         }
     }
@@ -82,7 +82,7 @@ public class ClientManager {
         
         Result result = null;
 
-        logger.info(" Trying to establish a connection to the daemon ");
+        logger.info("Trying to establish a connection to the daemon");
 
         try (Socket sock = new Socket(daemonHostname, daemonPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
@@ -94,16 +94,16 @@ public class ClientManager {
                 // Wait and Receive Result
                 result = (Result) in.readObject();
 
-                logger.info(" Received result from daemon: " + result);
+                logger.info("Received result from daemon: " + result);
                 
         } catch (UnknownHostException e) {
-                logger.error(" Don't know about host " + daemonHostname);
+                logger.error("Don't know about host " + daemonHostname);
                 System.exit(1);
         } catch (IOException e) {
-                System.err.println("Can not connect to Lift daemon at [" + daemonHostname + "]. Is the Lift daemon running?");
+                System.err.println("Can not connect to Lift daemon at [" + daemonHostname + ":" + daemonPort + "]. Is the Lift daemon running?");
                 System.exit(1);
         } catch (ClassNotFoundException e) {
-                logger.error(" ClassNotFoundException found!");
+                logger.error("ClassNotFoundException found!");
                 System.exit(1);
         }        
         

@@ -2,6 +2,8 @@
 package com.lift.daemon.command;
 
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
+import com.lift.daemon.DaemonTask;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -9,6 +11,8 @@ import java.io.File;
 
 
 public class AddCommand implements LiftCommand {
+    
+    private static final Logger logger  = new Logger(AddCommand.class);
     
     private RepositoryDAO repositoryDatabase    = null;
     private String filePath                     = null;
@@ -26,10 +30,10 @@ public class AddCommand implements LiftCommand {
         boolean isFileAdded     = false;
         RepositoryFile repoFile = null;
         
-        System.out.println("[ INFO ] ADD-CMD: Adding file [" + filePath + "] to repo...");
+        logger.info("Adding file [" + filePath + "] to repo...");
         
         if(!file.exists()) {
-            System.out.println("[ INFO ] ADD-CMD: File [" + filePath + "] does not exist.");
+            logger.info("File [" + filePath + "] does not exist.");
             return new Result(1, "Daemon: Could not add the file to repository. No such file: " + filePath, null);
             
         } else {
@@ -40,7 +44,7 @@ public class AddCommand implements LiftCommand {
             
             // Check if the file has already been added
             if(repositoryDatabase.getFilesMap().containsKey(fileID)) {
-                System.out.println("[ INFO ] ADD-CMD: File [" + filePath + "] is already in repo.");
+                logger.info("File [" + filePath + "] is already in repo.");
                 return new Result(2, "Daemon: The file is already in repository.", null);
             }
             

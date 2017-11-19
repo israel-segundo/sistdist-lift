@@ -2,6 +2,7 @@ package com.lift.daemon;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.lift.common.Logger;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -21,6 +22,8 @@ import java.util.Map;
 
 public class RepositoryDAO {
 
+    private static final Logger logger  = new Logger(RepositoryDAO.class);
+    
     private File databaseFile                     = null;
     private Map<String, RepositoryFile> filesMap  = null;
     private Gson gson                             = null;
@@ -74,18 +77,18 @@ public class RepositoryDAO {
 
     public boolean reload() {
         boolean isLoaded = false;
-        System.out.println("[ INFO ] Repo-Database: Loading repository state from file...");
+        logger.info("Repo-Database: Loading repository state from file...");
         
         if(!databaseFile.exists()) return true;
         
         try (Reader reader = new FileReader(databaseFile)) {
             
             filesMap = gson.fromJson(reader, type);
-            System.out.println("[ INFO ] Repo-Database: Repository finished loading.");
+            logger.info("Repo-Database: Repository finished loading.");
             isLoaded = true;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Repo-Database: Error when loading the repository state.");
+            logger.error("Repo-Database: Error when loading the repository state.");
             isLoaded = false;
         }
         
@@ -94,7 +97,7 @@ public class RepositoryDAO {
     
     public boolean commit() {
         boolean isSaved = false;
-        System.out.println("[ INFO ] Repo-Database: Saving repository state to file ...");
+        logger.info("Repo-Database: Saving repository state to file ...");
         
         try (Writer writer = new FileWriter(databaseFile)) {
             
@@ -102,11 +105,11 @@ public class RepositoryDAO {
             gson.toJson(filesMap, writer);
             isSaved = true;
             
-            System.out.println("[ INFO ] Repo-Database: Saving repository completed.");
+            logger.info("Repo-Database: Saving repository completed.");
             return isSaved;
             
         } catch (IOException ex) {
-            System.out.println("[ ERROR ] Repo-Database: Error when saving the repository state.");
+            logger.error("Repo-Database: Error when saving the repository state.");
             return isSaved;
         }
     }

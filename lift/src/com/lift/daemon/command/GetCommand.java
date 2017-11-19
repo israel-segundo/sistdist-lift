@@ -3,6 +3,7 @@ package com.lift.daemon.command;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lift.common.CommonUtility;
+import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryFile;
@@ -16,12 +17,12 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 public class GetCommand {
+    
+    private static final Logger logger  = new Logger(GetCommand.class);
+    
     private String ufl                = null;
     private Socket localSock          = null;
     private String metadataJson       = null;
@@ -61,7 +62,8 @@ public class GetCommand {
             result = executeRetrieveInRemoteClient(hostname, port, fileID, fileName, localSock);
                 
         } catch (IOException ex) {
-            Logger.getLogger(GetCommand.class.getName()).log(Level.SEVERE, null, ex);
+            
+            logger.error("Error when connecting to: " + localSock.getLocalSocketAddress());
         }
         
         
@@ -77,7 +79,7 @@ public class GetCommand {
              ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
         ) {
             Transaction transaction = new Transaction(Operation.META, new String[]{fileID});
-            System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
+            logger.info("Trying to establish a connection to the client: " + hostname + ":" + port);
 
             // Send
             out.writeObject(transaction);
@@ -89,15 +91,15 @@ public class GetCommand {
                 isReadyToTransfer = true;
             }
            
-            System.out.println("[ INFO ] Received result from client: " + result);
+            logger.info("Received result from client: " + result);
                 
 
         } catch (UnknownHostException e) {
-                System.err.println("[ ERROR ] Don't know about host " + hostname);
+                logger.error("Don't know about host " + hostname);
         } catch (IOException e) {
-                System.err.println("[ ERROR ] Can not connect to Lift client at [" + hostname + ":" + port + "].");
+                logger.error("Can not connect to Lift client at [" + hostname + ":" + port + "].");
         } catch (ClassNotFoundException e) {
-                System.err.println("[ ERROR ] ClassNotFoundException found!");
+                logger.error("ClassNotFoundException found!");
         }        
         
         return result;
@@ -116,7 +118,7 @@ public class GetCommand {
         ) {
             
             Transaction transaction = new Transaction(Operation.RETRIEVE, new String []{fileID});
-            System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
+            logger.info("Trying to establish a connection to the client: " + hostname + ":" + port);
 
             // Send the RETRIEVE operation to notify remote client to send bytes of data
             remoteOut.writeObject(transaction);
@@ -137,7 +139,7 @@ public class GetCommand {
                     localOut.writeLong(current);
                 }
                 
-                System.out.println("[ INFO ] Received from client [" + hostname + "] " + length + " bytes.");
+                logger.info("Received from client [" + hostname + "] " + length + " bytes.");
                 
     	    	// write buffer to file here...
                 try {
@@ -159,7 +161,7 @@ public class GetCommand {
             }
             
         } catch (IOException e) {
-            System.out.println("[ ERROR ] Can not connect to Lift client at [" + hostname + ":" + port + "]");
+            logger.error("Can not connect to Lift client at [" + hostname + ":" + port + "]");
             result.setReturnCode(2);
             result.setMessage("Daemon: Can not connect to Lift client at [" + hostname + ":" + port + "]. Client might not be available.");
         } 
