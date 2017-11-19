@@ -11,3 +11,18 @@ Things TO DO:
     a) Should check periodically if daemon is running
     b) Should also check if the repository state exists and it's readable
     c) Should be able to Start/Stop/Restart Daemon
+
+
+
+
+How to run
+------------------------------------------
+
+- Install ant. (please!)
+- Clean, compile, generate jar 
+	$ ./lift-build.sh
+
+- How to run lift-client:
+	$ ./lift.sh <params>
+	$ ./lift.sh add somefile
+
