@@ -2,14 +2,18 @@ package com.lift.common;
 
 import com.lift.daemon.RepositoryFile;
 import java.security.MessageDigest;
+import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class has the common utility functions for all other classes.
@@ -61,7 +65,7 @@ public class CommonUtility {
         
         Set<Map.Entry<String, RepositoryFile>> fileSet = map.entrySet();
         int[] elementLength                            = new int[5];
-        int[] standardLength                           = {30, 20, 20, 30, 20};
+        int[] standardLength                           = {30, 20, 20, 20, 6};
         StringBuilder format                           = new StringBuilder();
         
         fileSet.forEach((entry) -> {
@@ -122,9 +126,33 @@ public class CommonUtility {
     // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
+        if (bytes < unit) return String.format("%d B", bytes);
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+    
+    public static String humanReadableDaysAgo(String date) {
+        String timeAgo = date;
+        try {
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+            Date past = dateFormat.parse(date);
+            Date now = new Date();
+            long difference = now.getTime() - past.getTime();
+            if(difference/ (60 * 60 * 1000) > 23) {
+                timeAgo = TimeUnit.MILLISECONDS.toDays(difference) + " days ago";
+            } else if(difference/ (60 * 60 * 1000) > 0){
+                timeAgo = TimeUnit.MILLISECONDS.toHours(difference) + " hours ago";
+            } else if(difference/ (60 * 1000) > 1){
+                timeAgo = TimeUnit.MILLISECONDS.toMinutes(difference) + " minutes ago";
+            } else {
+                timeAgo = "just a moment ago";
+            }
+
+        } catch (ParseException ex) {
+        }
+        
+        return timeAgo;
     }
 }

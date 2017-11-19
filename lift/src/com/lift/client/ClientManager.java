@@ -15,10 +15,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -124,12 +129,14 @@ public class ClientManager {
 
             String format = CommonUtility.getFormatForFilesCmd(map);
             sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS") );
+            
+            
 
             fileSet.forEach((entry) -> {
                 String location     = entry.getValue().getName();
-                String size         = String.valueOf(entry.getValue().getSize());
+                String size         = CommonUtility.humanReadableByteCount(entry.getValue().getSize(), false);
                 String fileID       = entry.getValue().getGUID();
-                String dateAdded    = entry.getValue().getDateAdded();
+                String dateAdded    = CommonUtility.humanReadableDaysAgo(entry.getValue().getDateAdded());
                 String hits         = String.valueOf(entry.getValue().getHits());
                 sb.append( String.format(format, location, size, fileID, dateAdded, hits) );
             });
