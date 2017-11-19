@@ -102,7 +102,7 @@ public class ClientManager {
     
     public void add(String filePath) {
         
-        Transaction transaction = new Transaction(Operation.ADD, filePath);
+        Transaction transaction = new Transaction(Operation.ADD, new String [] {filePath});
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
@@ -111,7 +111,7 @@ public class ClientManager {
             System.out.println(result.getMessage());
         }
     }
-    
+
     public void get(String ufl) {
         
         if(! CommonUtility.isUFLValid(ufl)) {
@@ -119,19 +119,27 @@ public class ClientManager {
             return;
         }
 
-        Transaction transaction = new Transaction(Operation.GET, ufl);
-        Result metadata = sendOperationToDaemon(transaction);
+        // Metadata operation
+        String[] decodedUFL = CommonUtility.decodeUFL(ufl);
+        String clientGUID   = decodedUFL[0];
+        String fileID       = decodedUFL[1];        
+        
+        Transaction metaTransaction = new Transaction(Operation.META, new String [] {fileID});
+        Result metadata             = sendOperationToDaemon(metaTransaction);
 
         if (metadata.getReturnCode() != SUCCESS) {
             System.out.println(metadata.getMessage());
             return;
         }
-
+        
         RepositoryFile file = (RepositoryFile) metadata.getResult();
         long totalSize = file.getSize();
 
-        boolean isSuccessful = readDownloadProgressFromDaemon(totalSize);
+        //boolean isSuccessful = readDownloadProgressFromDaemon(totalSize);
 
+        // Retrieve file operation
+        Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl, file.toJson()});
+        Result getTxnResult        = sendOperationToDaemon(getTransaction);
 
 //        if (isSuccessful) {
 //            System.out.format("File downloaded to: ", getResult.getResult());
@@ -153,7 +161,7 @@ public class ClientManager {
     }
     
     public void rm(String fileID) {
-        Transaction transaction = new Transaction(Operation.RM, fileID);
+        Transaction transaction = new Transaction(Operation.RM, new String []{fileID});
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
@@ -164,7 +172,7 @@ public class ClientManager {
     }
     
     public void share(String filePath) {
-        Transaction transaction = new Transaction(Operation.SHARE, filePath);
+        Transaction transaction = new Transaction(Operation.SHARE,  new String []{filePath});
         Result result           = sendOperationToDaemon(transaction);
 
         if (result.getReturnCode() == SUCCESS) {
@@ -175,7 +183,7 @@ public class ClientManager {
     }
     
     public void ufl(String fileID) {
-        Transaction transaction = new Transaction(Operation.UFL, fileID);
+        Transaction transaction = new Transaction(Operation.UFL, new String[]{fileID});
         Result result           = sendOperationToDaemon(transaction);
 
         if (result.getReturnCode() == SUCCESS) {
@@ -204,6 +212,9 @@ public class ClientManager {
         boolean isErrorPresent = false;
         long delta             = 0;
         ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
+        
+        // TODO:  Implement timeout mech
+        // TODO: Reuse socket obj
         
         while(true) {
             try (Socket sock            = new Socket(DAEMON_HOSTNAME, DAEMON_PORT);

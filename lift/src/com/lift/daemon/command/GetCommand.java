@@ -1,5 +1,7 @@
 package com.lift.daemon.command;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.lift.common.CommonUtility;
 import com.lift.common.Operation;
 import com.lift.daemon.Daemon;
@@ -11,24 +13,27 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class GetCommand implements LiftCommand {
+public class GetCommand {
     private String ufl                = null;
     private Socket localSock          = null;
+    private String metadataJson       = null;
     private boolean isReadyToTransfer = false;
     private long totalBytes           = 0;
 
-    public GetCommand(String ufl, Socket sock) {
+    public GetCommand(String ufl, String metadataJson, Socket sock) {
         this.ufl  = ufl;
         this.localSock = sock;
+        this.metadataJson = metadataJson;
     }
     
-    @Override
     public Result execute() {
         Result result       = new Result();
         
@@ -37,32 +42,24 @@ public class GetCommand implements LiftCommand {
         String fileID       = decodedUFL[1];
         
         // Connect to server here and get below info...
-        String hostname     = "HARDCODED";
-        int port            = 51223;
+        String hostname     = "localhost";
+        int port            = 45120;
         
-        Result<RepositoryFile> metadataResponse = executeMetaInRemoteClient(hostname, port, fileID);
+        //Result<RepositoryFile> metadataResponse = executeMetaInRemoteClient(hostname, port, fileID);
         
         try (ObjectOutputStream out = new ObjectOutputStream(localSock.getOutputStream());) 
-        {
-            if(isReadyToTransfer) {
-                // Send back to client the metadata
-                out.writeObject(metadataResponse);
-             
-                RepositoryFile fileMetadata = metadataResponse.getResult();
-                totalBytes = fileMetadata.getSize();
-                // Workaround to get the filename regarding of filesystem:
-                String[] originalFileLocation = fileMetadata.getName().replaceAll("/", "#").replaceAll("\\", "#").split("#");
-                // This might cause NPE issues:
-                String fileName = originalFileLocation[originalFileLocation.length - 1];
+        {                
+            Gson gson = new Gson();
+            Type type = new TypeToken<RepositoryFile>(){}.getType(); 
+            RepositoryFile repositoryFile = gson.fromJson(metadataJson, type);
 
-                result = executeRetrieveInRemoteClient(hostname, port, fileID, fileName, localSock);
+            File f = new File(repositoryFile.getName());
+            String fileName = f.getName();
+
+            totalBytes = repositoryFile.getSize();
+
+            result = executeRetrieveInRemoteClient(hostname, port, fileID, fileName, localSock);
                 
-            } else {
-                result.setReturnCode(1);
-                result.setMessage(metadataResponse.getMessage());
-                
-                return result;
-            }
         } catch (IOException ex) {
             Logger.getLogger(GetCommand.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -79,7 +76,7 @@ public class GetCommand implements LiftCommand {
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
         ) {
-            Transaction transaction = new Transaction(Operation.META, fileID);
+            Transaction transaction = new Transaction(Operation.META, new String[]{fileID});
             System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
 
             // Send
@@ -118,7 +115,7 @@ public class GetCommand implements LiftCommand {
              ObjectInputStream remoteIn   = new ObjectInputStream(remoteSock.getInputStream());
         ) {
             
-            Transaction transaction = new Transaction(Operation.RETRIEVE, fileID);
+            Transaction transaction = new Transaction(Operation.RETRIEVE, new String []{fileID});
             System.out.println("[ INFO ] Trying to establish a connection to the client: " + hostname + ":" + port);
 
             // Send the RETRIEVE operation to notify remote client to send bytes of data
@@ -135,7 +132,10 @@ public class GetCommand implements LiftCommand {
             while (current != totalBytes && (length = remoteIn.read(buffer)) > 0){
                 // report to client launcher the bytes read for progress bar
                 current = current + length;
-                localOut.writeLong(current);
+                
+                if( null != localSock && localSock.isConnected()){
+                    localOut.writeLong(current);
+                }
                 
                 System.out.println("[ INFO ] Received from client [" + hostname + "] " + length + " bytes.");
                 

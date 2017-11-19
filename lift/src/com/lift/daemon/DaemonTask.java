@@ -53,14 +53,26 @@ public class DaemonTask implements Runnable {
         }        
     }
     
+    private void retrieveFile(Transaction transaction){
+        
+    }
+    
+    private Result retrieveMeta(Transaction transaction){
+        return attendTransaction(transaction);
+    }
+    
+    
     private Result attendTransaction(Transaction transaction){
         
         LiftCommand command  = null;
+        String [] parameters = transaction.getParameters();
+        
+        String firstParameter = (parameters==null) ? "" : parameters[0];
         
         switch(transaction.getOperation()){
             
             case Operation.ADD:
-                command = new AddCommand(transaction.getParameter(), repositoryDB);
+                command = new AddCommand(firstParameter, repositoryDB);
                 break;
                 
             case Operation.FILES:
@@ -68,15 +80,23 @@ public class DaemonTask implements Runnable {
                 break;
                 
             case Operation.GET:
-                //command = new GetCommand(transaction.getParameter(), sock);
+                
+                if(null!=transaction && null!= transaction.getParameters()){
+                    
+                    String ufl           = parameters[0];
+                    String metadataJson  = parameters[1];
+                    
+                    return new GetCommand(ufl, metadataJson, sock).execute();
+
+                }
                 break;
                 
             case Operation.META:
-                command = new MetaCommand(transaction.getParameter(), repositoryDB);
+                command = new MetaCommand(firstParameter, repositoryDB);
                 break;    
                 
             case Operation.RETRIEVE:
-                //command = new RetrieveCommand(transaction.getParameter(), repositoryDB);
+                //command = new RetrieveCommand(firstParameter, repositoryDB);
                 break;
                 
             case Operation.ID:
@@ -84,15 +104,15 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RM:
-                command = new RmCommand(transaction.getParameter(), repositoryDB);
+                command = new RmCommand(firstParameter, repositoryDB);
                 break;    
                 
             case Operation.SHARE:
-                command = new ShareCommand(transaction.getParameter(), repositoryDB, sessionDB);
+                command = new ShareCommand(firstParameter, repositoryDB, sessionDB);
                 break;
                 
             case Operation.UFL:
-                command = new UflCommand(transaction.getParameter(), repositoryDB, sessionDB);
+                command = new UflCommand(firstParameter, repositoryDB, sessionDB);
                 break;    
                 
             case Operation.VERSION:
@@ -100,7 +120,7 @@ public class DaemonTask implements Runnable {
                 break;    
                               
         }
-            
+        
         return command.execute();
     }    
 }

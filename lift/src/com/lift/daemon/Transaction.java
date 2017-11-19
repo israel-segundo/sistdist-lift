@@ -5,16 +5,20 @@ import java.io.Serializable;
 
 public class Transaction implements Serializable{
 
-    private String operation;
-    private String parameter;
+    protected String operation;
+    protected String [] parameters;
     
     public Transaction(){
         
     }
-    
-    public Transaction(String operation, String parameter){
+ 
+    public Transaction(String operation, String [] parameters){
         this.operation = operation;
-        this.parameter = parameter;
+        this.parameters = parameters;
+    }
+    
+    public String [] getParameters(){
+        return this.parameters;
     }
 
     public String getOperation() {
@@ -23,15 +27,5 @@ public class Transaction implements Serializable{
 
     public void setOperation(String operation) {
         this.operation = operation;
-    }
-
-    public String getParameter() {
-        return parameter;
-    }
-
-    public void setParameter(String parameter) {
-        this.parameter = parameter;
-    }
-    
-    
+    }    
 }

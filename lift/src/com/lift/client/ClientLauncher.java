@@ -36,9 +36,16 @@ public class ClientLauncher {
         initOptions();
         
         ClientManager client = new ClientManager();
+        
+        if(null == args || args.length == 0){
+            showUsage();
+            return;
+        }
+        
         // 
         // Parser
         //
+        
         loop: for (String opt : args) {
         
             switch(opt) {

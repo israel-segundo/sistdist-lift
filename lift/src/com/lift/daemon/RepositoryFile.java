@@ -1,5 +1,6 @@
 package com.lift.daemon;
 
+import com.google.gson.Gson;
 import com.lift.common.CommonUtility;
 import java.io.Serializable;
 
@@ -58,5 +59,8 @@ public class RepositoryFile implements Serializable {
         this.size = size;
     }
 
-
+    public String toJson(){
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 }

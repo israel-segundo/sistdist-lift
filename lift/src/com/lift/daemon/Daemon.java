@@ -28,11 +28,23 @@ public class Daemon {
     private static RepositoryDAO repositoryDatabase  = null;
     private static SessionDAO sessionDatabase        = null;
     
-    private static final int PORT_NUMBER             = 45115;
+    private static final int DEFAULT_PORT_NUMBER     = 45115;
     private static final String HOSTNAME             = "localhost";    
     
+    private static int port;
     
     public static void main(String[] args) {
+        
+        port = DEFAULT_PORT_NUMBER;
+
+        if(args.length > 1){
+            
+            try{
+                port = Integer.parseInt(args[0]);
+            } catch(Exception ex){
+                ex.printStackTrace();
+            }
+        }
         
         initSession();
         initRepository();
@@ -42,16 +54,17 @@ public class Daemon {
         ExecutorService service = Executors.newCachedThreadPool();
 
         try {
-            serverSocket = new ServerSocket(PORT_NUMBER);
+            serverSocket = new ServerSocket(port);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
+                System.out.println(String.format("Daemon listening on port %d", port));
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
             }
 
         } catch (IOException e) {
             System.out.println("[ ERROR ] Exception caught when trying to listen on port "
-                    + PORT_NUMBER + " or listening for a connection");
+                    + port + " or listening for a connection");
             System.out.println(e.getMessage());
         }    
     }
