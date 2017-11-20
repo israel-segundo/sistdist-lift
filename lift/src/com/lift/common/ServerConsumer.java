@@ -50,7 +50,9 @@ public class ServerConsumer {
     
     
 
-   
+    private String getServerUrl(){
+        return this.serverHostname + ":" + Integer.toString(this.serverPort);
+    }
     
     public boolean register(String clientId, int port, int numberFilesShared){
         
@@ -62,7 +64,7 @@ public class ServerConsumer {
             }
         */
         
-        String registerEndpoint = this.serverHostname + "/register";
+        String registerEndpoint = getServerUrl() + "/register";
         String payload = String.format(REGISTER_PAYLOAD, clientId, Integer.toString(port), Integer.toString(numberFilesShared));
 
         logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
@@ -120,7 +122,7 @@ public class ServerConsumer {
             }
         */        
         
-        String registerEndpoint = this.serverHostname + "/getServerConnectionInfo";
+        String registerEndpoint = getServerUrl()  + "/getServerConnectionInfo";
         String payload = String.format(GET_CONN_DETAILS_PAYLOAD, clientId);
 
         logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
@@ -192,7 +194,7 @@ public class ServerConsumer {
             }
         */        
         
-        String registerEndpoint = this.serverHostname + "/heartbeat";
+        String registerEndpoint = getServerUrl()  + "/heartbeat";
         String payload = String.format(HEARTBEAT_PAYLOAD, clientId, Integer.toString(numberFilesShared));
 
         logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
@@ -244,9 +246,19 @@ public class ServerConsumer {
         
         try{
             ServerConsumer serverConsumer = new ServerConsumer();
-            
-            
             serverConsumer.sendHeartBeat("testuser", 40);
+            
+            
+            Map<String, String> configInformation = serverConsumer.getConnectionDetails("testuser");
+            
+            for(String key : configInformation.keySet()){
+                System.out.println(String.format("%s -> %s", key, configInformation.get(key)));
+            }
+            
+            
+            boolean registered = serverConsumer.register("mahfoobah", 3244, 1);
+            
+            System.out.println("Maafoobah registered? " + registered);
             
         } catch(Exception ex){
             ex.printStackTrace();
