@@ -1,0 +1,17 @@
+===============================================================================
+  How to Run Server
+===============================================================================
+
+1. Have python3.5 and pip3 installed
+
+2. Install required dependencies using pip:
+
+    $ pip install -r /path/to/lift-server/requirements.txt
+
+3. Start server:
+
+    $ python liftserver.py [&]
+
+    This will start the server on the port configured in file appconfig.py
+
+      MS_APP_PORT = 8089   (default)
