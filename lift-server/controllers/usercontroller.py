@@ -127,5 +127,5 @@ class UserController:
         return self.build_response_json('success','Connection ID [{0}] registered successfully'.format(payload['clientGUID']))
 
 
-    def build_response_json(self, message, status):
+    def build_response_json(self, status, message ):
         return jsonify({'status':status, 'message': message})
