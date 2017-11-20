@@ -1,6 +1,7 @@
 package com.lift.daemon;
 
 import com.lift.common.CommonUtility;
+import java.io.Serializable;
 
 /**
  * This class represents the user session in the Lift network.
@@ -8,7 +9,7 @@ import com.lift.common.CommonUtility;
  * @author Alejandro Garcia
  * @author Israel Segundo
  */
-public class SessionFile {
+public class SessionFile implements Serializable {
     private String GUID;
     private String dateJoined;
     private boolean isConnected;

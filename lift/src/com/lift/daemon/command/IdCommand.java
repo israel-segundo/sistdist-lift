@@ -23,7 +23,8 @@ public class IdCommand implements LiftCommand {
         
         String id = sessionDatabase.getSession().getGUID();
         logger.info("The user ID is: " + id);
-        result = new Result(0, null, id);
+        
+        result = new Result(0, null, sessionDatabase.getSession());
         
         return result;
     }

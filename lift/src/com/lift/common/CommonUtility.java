@@ -2,13 +2,11 @@ package com.lift.common;
 
 import com.lift.daemon.RepositoryFile;
 import java.security.MessageDigest;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;

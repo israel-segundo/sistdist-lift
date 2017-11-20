@@ -8,6 +8,7 @@ import com.lift.common.ProgressBar;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.SessionDAO;
+import com.lift.daemon.SessionFile;
 import com.lift.daemon.Transaction;
 import java.io.File;
 import java.io.IOException;
@@ -15,15 +16,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -128,8 +124,7 @@ public class ClientManager {
             StringBuilder sb = new StringBuilder();
 
             String format = CommonUtility.getFormatForFilesCmd(map);
-            sb.append( String.format(format, "LOCATION", "SIZE", "FILE ID", "DATE ADDED", "HITS") );
-            
+            sb.append( String.format(format, "LOCATION", "FILE ID", "DATE ADDED", "SIZE", "HITS") );
             
 
             fileSet.forEach((entry) -> {
@@ -138,7 +133,7 @@ public class ClientManager {
                 String fileID       = entry.getValue().getGUID();
                 String dateAdded    = CommonUtility.humanReadableDaysAgo(entry.getValue().getDateAdded());
                 String hits         = String.valueOf(entry.getValue().getHits());
-                sb.append( String.format(format, location, size, fileID, dateAdded, hits) );
+                sb.append( String.format(format, location, fileID, dateAdded, size, hits) );
             });
 
             System.out.println(sb.toString());
@@ -193,7 +188,13 @@ public class ClientManager {
         Result result           = sendOperationToDaemon(transaction);
         
         if(result.getReturnCode() == SUCCESS) {
-            System.out.format("%-10s%-35s\n", "GUID is:", result.getResult());
+            SessionFile session = (SessionFile) result.getResult();
+            System.out.format("%-10s%-35s\n", "User GUID is:", session.getGUID());
+            boolean isConnected = session.getIsConnected();
+            String state = (isConnected) ? 
+                            Logger.ANSI_GREEN + "CONNECTED" + Logger.ANSI_RESET : 
+                            Logger.ANSI_RED + "NOT CONNECTED" + Logger.ANSI_RESET;
+            System.out.format("\nYou are [ %s ] to the Lift network.\n", state);
         } else {
             System.out.println(result.getMessage());
         }
