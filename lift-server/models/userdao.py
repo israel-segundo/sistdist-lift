@@ -130,7 +130,7 @@ class UserDao:
         timestamp_str  = datetime.datetime.fromtimestamp(timestamp_now).strftime('%Y-%m-%d %H:%M:%S')
         today_date_str = timestamp_str
 
-        print("Attempting to register heartbeat for user: {0}".format(new_user))
+        print("Attempting to register heartbeat for user: {0}".format(c_id))
 
         client = MongoClient()
         client = MongoClient(appconfig.MONGO_HOST, appconfig.MONGO_PORT)
@@ -149,10 +149,11 @@ class UserDao:
 
             if user_updated is not None:
                 print('User found on database')
-                users.find_one_and_update({'_id':target_user['_id']}, { "$set" : {"last_heartbeat"     : today_date_str,
+                users.find_one_and_update({'_id':user_updated['_id']}, { "$set" : {"last_heartbeat"     : today_date_str,
                                                                                   "number_files_shared": number_files_shared}})
-        except e:
-            print('Error when trying to fetch data from database {0}'.format(appconfig.MONGO_DB_NAME) % e)
+        except Exception as e:
+            print('Error when trying to fetch data from database {0}'.format(appconfig.MONGO_DB_NAME))
+            print(str(e))
             return None
 
 
