@@ -19,7 +19,7 @@ class UserController:
         # Validate parameters
         #
         expected_fields = [
-            {'name' :'c_id'       , 'type' : 'string' }
+            {'name' :'clientGUID'       , 'type' : 'string' }
         ]
 
         for expected_field in expected_fields:
