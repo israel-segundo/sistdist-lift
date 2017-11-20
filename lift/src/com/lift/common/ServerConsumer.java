@@ -65,16 +65,19 @@ public class ServerConsumer {
         */
         
         String registerEndpoint = getServerUrl() + "/register";
-        String payload = String.format(REGISTER_PAYLOAD, clientId, Integer.toString(port), Integer.toString(numberFilesShared));
+        JSONObject payloadObj   = new JSONObject();
+        payloadObj.put("clientGUID", clientId);
+        payloadObj.put("port", Integer.toString(port));
+        payloadObj.put("numberFilesShared", Integer.toString(numberFilesShared));
 
-        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
+        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payloadObj.toString()));
         
         try{
             Client client  = ClientBuilder.newClient();     
         
             Response response = client.target(registerEndpoint)
                                   .request(MediaType.APPLICATION_JSON)
-                                  .post(Entity.entity(payload, MediaType.APPLICATION_JSON));            
+                                  .post(Entity.entity(payloadObj.toString(), MediaType.APPLICATION_JSON));            
             
             logger.info("Response status: " + response.getStatus());
             
@@ -123,16 +126,17 @@ public class ServerConsumer {
         */        
         
         String registerEndpoint = getServerUrl()  + "/getServerConnectionInfo";
-        String payload = String.format(GET_CONN_DETAILS_PAYLOAD, clientId);
-
-        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
+        JSONObject payloadObj   = new JSONObject();
+        payloadObj.put("clientGUID", clientId);
+        
+        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payloadObj.toString()));
         
         try{
             Client client  = ClientBuilder.newClient();     
         
             Response response = client.target(registerEndpoint)
                                   .request(MediaType.APPLICATION_JSON)
-                                  .post(Entity.entity(payload, MediaType.APPLICATION_JSON));            
+                                  .post(Entity.entity(payloadObj.toString(), MediaType.APPLICATION_JSON));            
             
             logger.info("Response status: " + response.getStatus());
             
@@ -195,16 +199,19 @@ public class ServerConsumer {
         */        
         
         String registerEndpoint = getServerUrl()  + "/heartbeat";
-        String payload = String.format(HEARTBEAT_PAYLOAD, clientId, Integer.toString(numberFilesShared));
-
-        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payload));
+        
+        JSONObject payloadObj   = new JSONObject();
+        payloadObj.put("clientGUID", clientId);
+        payloadObj.put("numberFilesShared", Integer.toString(numberFilesShared));
+        
+        logger.info(String.format("Attempting server request POST to server: \nEndpoint:\n%s\nPayload:\n%s\n\n", registerEndpoint, payloadObj.toString()));
         
         try{
             Client client  = ClientBuilder.newClient();     
         
             Response response = client.target(registerEndpoint)
                                   .request(MediaType.APPLICATION_JSON)
-                                  .post(Entity.entity(payload, MediaType.APPLICATION_JSON));            
+                                  .post(Entity.entity(payloadObj.toString(), MediaType.APPLICATION_JSON));            
             
             logger.info("Response status: " + response.getStatus());
             
