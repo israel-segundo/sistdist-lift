@@ -19,7 +19,7 @@ class UserController:
         # Validate parameters
         #
         expected_fields = [
-            {'name' :'c_id'       , 'type' : 'string' }
+            {'name' :'clientGUID'       , 'type' : 'string' }
         ]
 
         for expected_field in expected_fields:
@@ -38,10 +38,10 @@ class UserController:
         #   Get connection info from database
         #
         user_dao        = UserDao()
-        connection_info = user_dao.get_server_connection_info(c_id=payload['c_id'])
+        connection_info = user_dao.get_server_connection_info(c_id=payload['clientGUID'])
 
         if connection_info is None:
-            return self.build_response_json('error','Could not retrieve connection info of clientId {0}.'.format(payload['c_id']))
+            return self.build_response_json('error','Could not retrieve connection info of clientId {0}.'.format(payload['clientGUID']))
 
         return self.build_response_json('success',connection_info)
 
@@ -127,5 +127,5 @@ class UserController:
         return self.build_response_json('success','Connection ID [{0}] registered successfully'.format(payload['clientGUID']))
 
 
-    def build_response_json(self, message, status):
+    def build_response_json(self, status, message ):
         return jsonify({'status':status, 'message': message})
