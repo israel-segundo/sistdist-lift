@@ -19,9 +19,9 @@ public class ServerConsumer {
     private String serverHostname   = null;
     private int serverPort          = -1;
     
-    private final String REGISTER_PAYLOAD           = "{\"c_id\":\"%s\",\"port\":\"%s\",\"numberFilesShared\":\"%s\"}";
-    private final String HEARTBEAT_PAYLOAD          = "{\"c_id\":\"%s\",\"numberFilesShared\":\"%s\"}";
-    private final String GET_CONN_DETAILS_PAYLOAD   = "{\"c_id\":\"%s\"}";
+    private final String REGISTER_PAYLOAD           = "{\"clientGUID\":\"%s\",\"port\":\"%s\",\"numberFilesShared\":\"%s\"}";
+    private final String HEARTBEAT_PAYLOAD          = "{\"clientGUID\":\"%s\",\"numberFilesShared\":\"%s\"}";
+    private final String GET_CONN_DETAILS_PAYLOAD   = "{\"clientGUID\":\"%s\"}";
     /*
         /register
         /getServerConnectionInfo
