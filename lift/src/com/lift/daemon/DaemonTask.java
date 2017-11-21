@@ -100,13 +100,13 @@ public class DaemonTask implements Runnable {
                 
                 Daemon.isClientReady = Boolean.getBoolean(firstParameter);
                 
-                return null;
+                return new Result();
                 
             case Operation.TERMINATE_DOWNLOAD:
                 
                 Daemon.terminateDownload = Boolean.getBoolean(firstParameter);
                 
-                return null;
+                return new Result();
                 
             case Operation.META:
                 command = new MetaCommand(firstParameter, repositoryDB);

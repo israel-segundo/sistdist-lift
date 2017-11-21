@@ -53,8 +53,8 @@ public class GetCommand {
         
         // Connect to server here and get below info... this is done inside getMetadataFromRemoteClient
         
-        // VERY IMPORTAN: do not start the download unless a local connection is done and client is ready
-        while (Daemon.isClientReady == false || Daemon.terminateDownload == false) {
+        // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
+        while (Daemon.isClientReady == false) {
             // Wait until the client is ready to receive petitions (longs) from this object...
         }
         

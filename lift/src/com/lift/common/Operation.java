@@ -17,8 +17,9 @@ public class Operation {
     public static final String VERSION  = "version";
     public static final String HELP     = "--help";
     
-    public static final String META     = "META";
-    public static final String RETRIEVE = "RETRIEVE";
+    // Dependant GET operations:
+    public static final String META               = "META";
+    public static final String RETRIEVE           = "RETRIEVE";
     public static final String TERMINATE_DOWNLOAD = "TERMINATE_DOWNLOAD";
-    public static final String CLIENT_READY = "CLIENT_READY";
+    public static final String CLIENT_READY       = "CLIENT_READY";
 }
