@@ -182,6 +182,8 @@ public class ClientManager {
         Result metadata            = sendOperationToDaemon(getTransaction);
 
         if (metadata.getReturnCode() != SUCCESS) {
+            logger.info("Metadata response is: " + metadata.getReturnCode());
+            logger.info("Metadata msg is: " + metadata.getMessage());
             System.out.println(metadata.getMessage());
             sendOperationToDaemon(new Transaction(Operation.TERMINATE_DOWNLOAD, new String [] {"false"}));
             return;
@@ -189,6 +191,8 @@ public class ClientManager {
         
         RepositoryFile file = (RepositoryFile) metadata.getResult();
         long totalSize = file.getSize();
+        
+        logger.info("DOWNLOAD: Total size from file is " + totalSize);
 
         // If metadata is successful this means the download has been started by a daemon thread
         // Start reading from the socket the longs sent by daemon for progress bar
@@ -273,15 +277,21 @@ public class ClientManager {
         try {
             sock             = new ServerSocket(0);
             int downloadPort = sock.getLocalPort();
+            logger.info("PROGRESS PORT is: " + downloadPort);
             
             while (true) {
-
+                
+                
+                logger.info("Socket set at " + downloadPort);
+                sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] { "true", String.valueOf(downloadPort) }));
+                
                 Socket clientSocket = sock.accept();
+                
+                logger.info("Accepted a request...");
+                
                 try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                      ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());) {
                     
-                    Daemon.localClientSocket = clientSocket;
-                    sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] { "true", String.valueOf(downloadPort) }));
                     
                     delta = in.readLong();
                     bar.updateProgress(delta);

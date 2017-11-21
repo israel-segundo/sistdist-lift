@@ -22,20 +22,21 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 
-public class GetCommand {
+public class GetCommand implements Runnable {
     
     private static final Logger logger  = new Logger(GetCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private String ufl                = null;
     private String metadataJson       = null;
-    private boolean isReadyToTransfer = false;
+    private Daemon.Sem sem            = null;
     private long totalBytes           = 0;
 
     private String serverHostIpAddress    = null;
     private Integer serverHostPort        = null;
     
-    public GetCommand(String ufl, Socket sock) {
+    public GetCommand(String ufl, Daemon.Sem s) {
         this.ufl  = ufl;
+        this.sem = s;
     }
     
     public void setMetadata(String metadataJson) {
@@ -50,11 +51,11 @@ public class GetCommand {
         String fileID       = decodedUFL[1];
         
         // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
-        while (Daemon.isClientReady == false) {
+        while (sem.isReady == false) {
             // Wait until the local client is ready start the handling the download...
         }
-        
-        if(Daemon.terminateDownload) return result;
+        logger.info("Finished Waiting...");
+        if(sem.terminate) return result;
                       
         Gson gson = new Gson();
         Type type = new TypeToken<RepositoryFile>() {}.getType();
@@ -124,10 +125,10 @@ public class GetCommand {
             result = (Result) in.readObject();
 
             if (result.getReturnCode() == Daemon.SUCCESS) {
-                isReadyToTransfer = true;
+                logger.info("Received metadata msg: " + result.getMessage());
             }
            
-            logger.info("Received result from client: " + result);
+            logger.info("Received metadata response: " + result.getReturnCode());
                 
 
         } catch (UnknownHostException e) {
@@ -148,7 +149,7 @@ public class GetCommand {
         long current        = 0;
         
         try (// localSock: used for sending progress
-             Socket localSock             = new Socket(hostname, Daemon.downloadPortNumber);
+             Socket localSock             = new Socket(hostname, sem.downloadPort);
              ObjectOutputStream localOut  = new ObjectOutputStream(localSock.getOutputStream());
                 
             // remoteSock: used for getting file bytes
@@ -208,6 +209,39 @@ public class GetCommand {
         } 
         
         return result;
+    }
+
+    @Override
+    public void run() {
+        Result result       = new Result();
+        
+        String[] decodedUFL = CommonUtility.decodeUFL(ufl);
+        String clientGUID   = decodedUFL[0];
+        String fileID       = decodedUFL[1];
+        
+        // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
+        
+       logger.info("PID GETCMD: " + Thread.currentThread().getId());
+        logger.info("Sem from GET CMD hashcode: " + sem.hashCode());
+        while (sem.isReady == false) {
+            //logger.info("Waiting... isClientReady: " + sem.isReady);
+            // Wait until the local client is ready start the handling the download...
+        }
+        logger.info("Finished Waiting...");
+        if(sem.terminate) return;
+                      
+        Gson gson = new Gson();
+        Type type = new TypeToken<RepositoryFile>() {}.getType();
+        RepositoryFile repositoryFile = gson.fromJson(metadataJson, type);
+
+        File f = new File(repositoryFile.getName());
+        String fileName = f.getName();
+
+        totalBytes = repositoryFile.getSize();
+
+        // This will start sending longs (for progress bar) to client (which now is acting like a server)
+        result = retrieveFileFromRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName);
+
     }
     
 }

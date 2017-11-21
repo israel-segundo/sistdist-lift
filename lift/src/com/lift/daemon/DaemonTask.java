@@ -1,5 +1,6 @@
 package com.lift.daemon;
 
+import com.google.gson.Gson;
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
@@ -27,11 +28,13 @@ public class DaemonTask implements Runnable {
     Socket sock;
     RepositoryDAO repositoryDB;
     SessionDAO sessionDB;
+    Daemon.Sem sem;
     
-    public DaemonTask(Socket sock, RepositoryDAO repositoryDB, SessionDAO sessionDB){
+    public DaemonTask(Daemon.Sem sem, Socket sock, RepositoryDAO repositoryDB, SessionDAO sessionDB){
         this.sock         = sock;
         this.repositoryDB = repositoryDB;
         this.sessionDB    = sessionDB;
+        this.sem          = sem;
     }
     
     @Override
@@ -74,23 +77,26 @@ public class DaemonTask implements Runnable {
                 break;
                 
             case Operation.GET:
-                GetCommand getCommand = new GetCommand(firstParameter, sock);
+                
+                logger.info("Sem from DAEMONTASK hashcode: " + sem.hashCode());
+                GetCommand getCommand = new GetCommand(firstParameter, sem);
                 Result result         = getCommand.getMetadataFromRemoteClient(firstParameter);
                 
                 if (result.getReturnCode() != Daemon.SUCCESS) {
                     Daemon.terminateDownload = true;
+                    sem.terminate = Boolean.getBoolean(firstParameter);
                     return result;
                 }
                 
-                getCommand.setMetadata((String)result.getResult());
+                Gson gson = new Gson();
+                String metaJson = gson.toJson(result.getResult());
+                logger.info("Metadata is: " + metaJson);
+                getCommand.setMetadata(metaJson);
                 
-                Thread downloadFile = new Thread() {
-                    public void run() {
-                        getCommand.execute();
-                    }
-                };
+                Thread downloadFile = new Thread(getCommand);
                 
                 downloadFile.start();
+                logger.info("PID DAEMONTASK: " + downloadFile.getId());
                 
                 return result;
                 
@@ -100,11 +106,18 @@ public class DaemonTask implements Runnable {
                 Daemon.isClientReady      = Boolean.getBoolean(clientReady);
                 Daemon.downloadPortNumber = Integer.parseInt(downloadPort);
                 
+                sem.isReady = Boolean.getBoolean(clientReady);
+                sem.downloadPort = Integer.parseInt(downloadPort);
+                
+                logger.info("isClientReady: " + Daemon.isClientReady);
+                logger.info("downloadPortNumber: " + Daemon.downloadPortNumber);
+                
                 return new Result();
                 
             case Operation.TERMINATE_DOWNLOAD:
                 
                 Daemon.terminateDownload = Boolean.getBoolean(firstParameter);
+                sem.terminate = Boolean.getBoolean(firstParameter);
                 
                 return new Result();
                 

@@ -22,6 +22,12 @@ import java.util.concurrent.Executors;
  * @author Israel Segundo
  */
 public class Daemon {
+    
+    public static class Sem {
+        public boolean isReady   = false;
+        public boolean terminate = false;
+        public int downloadPort  = 0;
+    }
        
     private static Logger logger        = null;
 
@@ -42,10 +48,11 @@ public class Daemon {
     public static boolean isConnected                = true;
     
     // To be used for download
-    public static boolean isClientReady              = false;
+    public static volatile boolean isClientReady     = false;
     public static Socket localClientSocket           = null;
-    public static boolean terminateDownload          = false;
-    public static int downloadPortNumber             = 0;
+    public static volatile boolean terminateDownload = false;
+    public static volatile int downloadPortNumber    = 0;
+    public static Sem sem = new Sem();
         
     public static void main(String[] args) {
         
@@ -72,7 +79,9 @@ public class Daemon {
             
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
+                
+                logger.info("Sem from DAEMON hashcode: " + sem.hashCode());
+                service.execute(new DaemonTask(sem, clientSocket, repositoryDatabase, sessionDatabase));
             }
 
         } catch (IOException e) {
