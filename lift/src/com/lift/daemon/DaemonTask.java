@@ -56,15 +56,6 @@ public class DaemonTask implements Runnable {
         }        
     }
     
-    private void retrieveFile(Transaction transaction){
-        
-    }
-    
-    private Result retrieveMeta(Transaction transaction){
-        return attendTransaction(transaction);
-    }
-    
-    
     private Result attendTransaction(Transaction transaction){
         
         LiftCommand command  = null;
@@ -86,14 +77,14 @@ public class DaemonTask implements Runnable {
                 
                     
                 GetCommand getCommand = new GetCommand(firstParameter, sock);
-                Result r = getCommand.getMetadataFromRemoteClient(firstParameter);
+                Result result = getCommand.getMetadataFromRemoteClient(firstParameter);
                 
-                if (r.getReturnCode() != Daemon.SUCCESS) {
+                if (result.getReturnCode() != Daemon.SUCCESS) {
                     Daemon.terminateDownload = true;
-                    return r;
+                    return result;
                 }
                 
-                getCommand.setMetadata((String)r.getResult());
+                getCommand.setMetadata((String)result.getResult());
                 
                 Thread downloadFile = new Thread() {
                     public void run() {
@@ -103,8 +94,19 @@ public class DaemonTask implements Runnable {
                 
                 downloadFile.start();
                 
-                return r;
+                return result;
                 
+            case Operation.CLIENT_READY:
+                
+                Daemon.isClientReady = Boolean.getBoolean(firstParameter);
+                
+                return null;
+                
+            case Operation.TERMINATE_DOWNLOAD:
+                
+                Daemon.terminateDownload = Boolean.getBoolean(firstParameter);
+                
+                return null;
                 
             case Operation.META:
                 command = new MetaCommand(firstParameter, repositoryDB);

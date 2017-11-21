@@ -19,4 +19,6 @@ public class Operation {
     
     public static final String META     = "META";
     public static final String RETRIEVE = "RETRIEVE";
+    public static final String TERMINATE_DOWNLOAD = "TERMINATE_DOWNLOAD";
+    public static final String CLIENT_READY = "CLIENT_READY";
 }

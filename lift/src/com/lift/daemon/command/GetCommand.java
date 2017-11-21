@@ -88,7 +88,6 @@ public class GetCommand {
             
         }catch(Exception ex){
             logger.error("Cannot connect to server");
-            ex.printStackTrace();
         }
         
         // Get connection details

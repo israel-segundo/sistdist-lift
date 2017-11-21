@@ -175,15 +175,15 @@ public class ClientManager {
         String fileID       = decodedUFL[1];       
         
         // This is a kind of semaphore to avoid infinite loop in GetCommand
-        Daemon.terminateDownload = false;
-        Daemon.isClientReady     = false;
+        sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false"}));
+        sendOperationToDaemon(new Transaction(Operation.TERMINATE_DOWNLOAD, new String [] {"false"}));
         
         Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl});
         Result metadata            = sendOperationToDaemon(getTransaction);
 
         if (metadata.getReturnCode() != SUCCESS) {
             System.out.println(metadata.getMessage());
-            Daemon.terminateDownload = true;
+            sendOperationToDaemon(new Transaction(Operation.TERMINATE_DOWNLOAD, new String [] {"false"}));
             return;
         }
         
@@ -193,6 +193,8 @@ public class ClientManager {
         // If metadata is successful this means the download has been started by a daemon thread
         // Start reading from the socket the longs sent by daemon for progress bar
         readDownloadProgressFromDaemon(totalSize);
+        
+        sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false"}));
         
     }
     
@@ -278,7 +280,7 @@ public class ClientManager {
                      ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());) {
                     
                     Daemon.localClientSocket = clientSocket;
-                    Daemon.isClientReady = true;
+                    sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"true"}));
                     
                     delta = in.readLong();
                     bar.updateProgress(delta);
@@ -290,7 +292,7 @@ public class ClientManager {
 
                 } catch (IOException ex) {
                     isErrorPresent = true;
-                    Daemon.isClientReady = false;
+                    sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false"}));
                     System.out.printf("\n\nError: The connection was interrupted.\n");
                     break;
                 }
