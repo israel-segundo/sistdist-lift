@@ -17,6 +17,6 @@ public class Operation {
     public static final String VERSION  = "version";
     public static final String HELP     = "--help";
     
-    public static final String META     = "0x00";
-    public static final String RETRIEVE = "0x01";
+    public static final String META     = "META";
+    public static final String RETRIEVE = "RETRIEVE";
 }

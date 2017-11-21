@@ -39,7 +39,12 @@ public class Daemon {
     private static int portNumber                    = 0;
     private static AppConfig appConfig               = null;
     
-    public static boolean isConnected               = true;
+    public static boolean isConnected                = true;
+    
+    // To be used for download
+    public static boolean isClientReady              = false;
+    public static Socket localClientSocket           = null;
+    public static boolean terminateDownload          = false;
         
     public static void main(String[] args) {
         
@@ -224,6 +229,11 @@ public class Daemon {
     
     private int getFilesSharedCount() {
         return repositoryDatabase.getFileCount();
+    }
+    
+    public static void setLocalClientSocket(Socket sock) {
+        localClientSocket = sock;
+        isClientReady = true;
     }
     
 }

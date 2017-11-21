@@ -5,6 +5,7 @@ import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.common.ProgressBar;
+import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.SessionDAO;
@@ -14,12 +15,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -166,25 +169,30 @@ public class ClientManager {
             return;
         }
 
-        // Metadata operation
+        // Decode the UFL
         String[] decodedUFL = CommonUtility.decodeUFL(ufl);
         String clientGUID   = decodedUFL[0];
-        String fileID       = decodedUFL[1];        
+        String fileID       = decodedUFL[1];       
         
-        Transaction metaTransaction = new Transaction(Operation.META, new String [] {fileID});
-        Result metadata             = sendOperationToDaemon(metaTransaction);
+        // This is a kind of semaphore to avoid infinite loop in GetCommand
+        Daemon.terminateDownload = false;
+        
+        Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl});
+        Result metadata            = sendOperationToDaemon(getTransaction);
 
         if (metadata.getReturnCode() != SUCCESS) {
             System.out.println(metadata.getMessage());
+            Daemon.terminateDownload = true;
             return;
         }
         
         RepositoryFile file = (RepositoryFile) metadata.getResult();
         long totalSize = file.getSize();
 
-        // Retrieve file operation
-        Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl, file.toJson()});
-        Result getTxnResult        = sendOperationToDaemon(getTransaction);
+        // If metadata is successful this means the download has been started by a daemon thread
+        // Start reading from the socket the longs sent by daemon for progress bar
+        readDownloadProgressFromDaemon(totalSize);
+        
     }
     
     public void id() {
@@ -257,29 +265,38 @@ public class ClientManager {
         long delta             = 0;
         ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
         
-        // TODO:  Implement timeout mech
-        // TODO: Reuse socket obj
-        
-        while(true) {
-            try (Socket sock            = new Socket(daemonHostname, daemonPort);
-                 ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
-                 ObjectInputStream in   = new ObjectInputStream(sock.getInputStream());
-                ) 
-            {    
-                delta = in.readLong();
-                bar.updateProgress(delta);
-                
-                if (delta >= totalDataSize) {
-                    System.out.printf("\n\nDownload is complete.\n");
+        // TODO:  VERY IMPORTANT Implement timeout mech
+        ServerSocket sock;
+        try {
+            sock = new ServerSocket(daemonPort);
+            
+            while (true) {
+
+                Socket clientSocket = sock.accept();
+                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                     ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());) {
+                    
+                    Daemon.localClientSocket = clientSocket;
+                    Daemon.isClientReady = true;
+                    
+                    delta = in.readLong();
+                    bar.updateProgress(delta);
+
+                    if (delta >= totalDataSize) {
+                        System.out.printf("\n\nDownload is complete.\n");
+                        break;
+                    }
+
+                } catch (IOException ex) {
+                    isErrorPresent = true;
+                    System.out.printf("\n\nError: The connection was interrupted.\n");
                     break;
                 }
-
-            } catch (IOException ex) {
-                isErrorPresent = true;
-                System.out.printf("\n\nError: The connection was interrupted.\n");
-                break;
-            }  
+            }
+        } catch (IOException ex) {
+            
         }
+        
         
         return isErrorPresent;
     }

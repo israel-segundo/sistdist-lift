@@ -35,9 +35,12 @@ public class GetCommand {
     private String serverHostIpAddress    = null;
     private Integer serverHostPort        = null;
     
-    public GetCommand(String ufl, String metadataJson, Socket sock) {
+    public GetCommand(String ufl, Socket sock) {
         this.ufl  = ufl;
         this.localSock = sock;
+    }
+    
+    public void setMetadata(String metadataJson) {
         this.metadataJson = metadataJson;
     }
     
@@ -48,29 +51,28 @@ public class GetCommand {
         String clientGUID   = decodedUFL[0];
         String fileID       = decodedUFL[1];
         
-        // Connect to server here and get below info...
-        getRemoteClientConnectionDetails(clientGUID);
+        // Connect to server here and get below info... this is done inside getMetadataFromRemoteClient
         
-        //Result<RepositoryFile> metadataResponse = executeMetaInRemoteClient(hostname, port, fileID);
-        
-        try (ObjectOutputStream out = new ObjectOutputStream(localSock.getOutputStream());) 
-        {                
-            Gson gson = new Gson();
-            Type type = new TypeToken<RepositoryFile>(){}.getType(); 
-            RepositoryFile repositoryFile = gson.fromJson(metadataJson, type);
-
-            File f = new File(repositoryFile.getName());
-            String fileName = f.getName();
-
-            totalBytes = repositoryFile.getSize();
-
-            result = executeRetrieveInRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName, localSock);
-                
-        } catch (IOException ex) {
-            
-            logger.error("Error when connecting to: " + localSock.getLocalSocketAddress());
+        // VERY IMPORTAN: do not start the download unless a local connection is done and client is ready
+        while (Daemon.isClientReady == false || Daemon.terminateDownload == false) {
+            // Wait until the client is ready to receive petitions (longs) from this object...
         }
         
+        if(Daemon.terminateDownload) return result;
+                      
+        Gson gson = new Gson();
+        Type type = new TypeToken<RepositoryFile>() {}.getType();
+        RepositoryFile repositoryFile = gson.fromJson(metadataJson, type);
+
+        File f = new File(repositoryFile.getName());
+        String fileName = f.getName();
+
+        totalBytes = repositoryFile.getSize();
+
+        // This will start sending longs (for progress bar) to client (which now is acting like a server)
+        result = executeRetrieveInRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName, Daemon.localClientSocket);
+
+
         
         return result;
     }
@@ -102,16 +104,23 @@ public class GetCommand {
     }
     
     
-    // TODO: Can we refactor this method with the one in ClientManager?
-    public Result executeMetaInRemoteClient(String hostname, int port, String fileID) {
+    public Result getMetadataFromRemoteClient(String ufl) {
         Result result = new Result();
         
-        try (Socket sock            = new Socket(hostname, port);
+        String[] decodedUFL = CommonUtility.decodeUFL(ufl);
+        String clientGUID   = decodedUFL[0];
+        String fileID       = decodedUFL[1];
+        
+        
+        getRemoteClientConnectionDetails(clientGUID);
+        
+        
+        try (Socket sock            = new Socket(this.serverHostIpAddress, this.serverHostPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
              ObjectInputStream in   = new ObjectInputStream(sock.getInputStream());
         ) {
             Transaction transaction = new Transaction(Operation.META, new String[]{fileID});
-            logger.info("Trying to establish a connection to the client: " + hostname + ":" + port);
+            logger.info("Trying to establish a connection to the client: " + this.serverHostIpAddress + ":" + this.serverHostPort);
 
             // Send
             out.writeObject(transaction);
@@ -127,15 +136,16 @@ public class GetCommand {
                 
 
         } catch (UnknownHostException e) {
-                logger.error("Don't know about host " + hostname);
+                logger.error("Don't know about host " + this.serverHostIpAddress);
         } catch (IOException e) {
-                logger.error("Can not connect to Lift client at [" + hostname + ":" + port + "].");
+                logger.error("Can not connect to Lift client at [" + this.serverHostIpAddress + ":" + this.serverHostPort + "].");
         } catch (ClassNotFoundException e) {
                 logger.error("ClassNotFoundException found!");
         }        
         
         return result;
     }
+    
     
     // TODO: Can we refactor this method with the one in ClientManager?
     public Result executeRetrieveInRemoteClient(String hostname, int port, String fileID, String fileName, Socket localSock) {

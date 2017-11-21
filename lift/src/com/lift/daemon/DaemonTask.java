@@ -84,15 +84,27 @@ public class DaemonTask implements Runnable {
                 
             case Operation.GET:
                 
-                if(null != transaction && null != transaction.getParameters()){
                     
-                    String ufl           = parameters[0];
-                    String metadataJson  = parameters[1];
-                    
-                    return new GetCommand(ufl, metadataJson, sock).execute();
-
+                GetCommand getCommand = new GetCommand(firstParameter, sock);
+                Result r = getCommand.getMetadataFromRemoteClient(firstParameter);
+                
+                if (r.getReturnCode() != Daemon.SUCCESS) {
+                    Daemon.terminateDownload = true;
+                    return r;
                 }
-                break;
+                
+                getCommand.setMetadata((String)r.getResult());
+                
+                Thread downloadFile = new Thread() {
+                    public void run() {
+                        getCommand.execute();
+                    }
+                };
+                
+                downloadFile.start();
+                
+                return r;
+                
                 
             case Operation.META:
                 command = new MetaCommand(firstParameter, repositoryDB);
