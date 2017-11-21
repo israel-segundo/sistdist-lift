@@ -176,6 +176,7 @@ public class ClientManager {
         
         // This is a kind of semaphore to avoid infinite loop in GetCommand
         Daemon.terminateDownload = false;
+        Daemon.isClientReady     = false;
         
         Transaction getTransaction = new Transaction(Operation.GET, new String [] {ufl});
         Result metadata            = sendOperationToDaemon(getTransaction);
@@ -289,6 +290,7 @@ public class ClientManager {
 
                 } catch (IOException ex) {
                     isErrorPresent = true;
+                    Daemon.isClientReady = false;
                     System.out.printf("\n\nError: The connection was interrupted.\n");
                     break;
                 }
