@@ -6,6 +6,7 @@ import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
+import com.lift.common.ServerConsumer;
 import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -18,6 +19,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 
 public class GetCommand {
@@ -30,6 +32,9 @@ public class GetCommand {
     private boolean isReadyToTransfer = false;
     private long totalBytes           = 0;
 
+    private String serverHostIpAddress    = null;
+    private Integer serverHostPort        = null;
+    
     public GetCommand(String ufl, String metadataJson, Socket sock) {
         this.ufl  = ufl;
         this.localSock = sock;
@@ -44,8 +49,7 @@ public class GetCommand {
         String fileID       = decodedUFL[1];
         
         // Connect to server here and get below info...
-        String hostname     = "localhost";
-        int port            = 45120;
+        getRemoteClientConnectionDetails(clientGUID);
         
         //Result<RepositoryFile> metadataResponse = executeMetaInRemoteClient(hostname, port, fileID);
         
@@ -60,7 +64,7 @@ public class GetCommand {
 
             totalBytes = repositoryFile.getSize();
 
-            result = executeRetrieveInRemoteClient(hostname, port, fileID, fileName, localSock);
+            result = executeRetrieveInRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName, localSock);
                 
         } catch (IOException ex) {
             
@@ -70,6 +74,33 @@ public class GetCommand {
         
         return result;
     }
+    
+    
+    public void getRemoteClientConnectionDetails(String clientGUID){
+    
+        ServerConsumer serverConsumer = null;
+        
+        // Connect to server
+        try{
+            serverConsumer = new ServerConsumer();
+            
+        }catch(Exception ex){
+            logger.error("Cannot connect to server");
+            ex.printStackTrace();
+        }
+        
+        // Get connection details
+        Map<String,String> connectionDetailsMap = serverConsumer.getConnectionDetails(clientGUID);
+        
+        if(connectionDetailsMap.isEmpty()){
+            logger.error("There is no data of clientGUID in server");
+            // TODO: handle error
+        }
+        
+        this.serverHostIpAddress = connectionDetailsMap.get("ip");
+        this.serverHostPort      = Integer.parseInt(connectionDetailsMap.get("port"));
+    }
+    
     
     // TODO: Can we refactor this method with the one in ClientManager?
     public Result executeMetaInRemoteClient(String hostname, int port, String fileID) {

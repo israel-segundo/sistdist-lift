@@ -3,10 +3,12 @@ package com.lift.daemon;
 import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
+import com.lift.common.ServerConsumer;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,6 +38,8 @@ public class Daemon {
     
     private static int portNumber                    = 0;
     private static AppConfig appConfig               = null;
+    
+    public static boolean isConnected               = true;
         
     public static void main(String[] args) {
         
@@ -44,6 +48,9 @@ public class Daemon {
         initSession();
         initRepository();
         initSharedDirectory();
+        registerIntoServer();
+        
+        spawnHeartbeatService();
         
         ServerSocket serverSocket;
         ExecutorService service = Executors.newCachedThreadPool();
@@ -88,6 +95,47 @@ public class Daemon {
         AppConfig.logFilePath = configDirFile.getAbsolutePath();
         logger = new Logger(Daemon.class, AppConfig.logFilePath + File.separator + "lift.log");
         
+    }
+    
+    
+    private static void spawnHeartbeatService(){
+        
+        HearthBeatService heartBeatService = new HearthBeatService(sessionDatabase, repositoryDatabase);
+        new Thread(heartBeatService).start();
+    }
+    
+    private static void registerIntoServer(){
+        
+        ServerConsumer serverConsumer = null;
+        
+        // Attempt to connect to lift-server
+        try{
+            serverConsumer = new ServerConsumer();
+            
+            
+        } catch(Exception ex){
+            logger.error("Cannot connect to lift-server");
+            
+            // TODO:  Notify to client about server being down
+        }
+        
+        
+        // Register current client into server
+        boolean wasRegistered = serverConsumer.register(sessionDatabase.getSession().getGUID(), 
+                                                        sessionDatabase.getSession().getDaemonPort(),
+                                                        repositoryDatabase.getFileCount());
+        
+        if(wasRegistered){
+            logger.info("We got registered into the lift-server.");
+            
+            sessionDatabase.getSession().setIsConnected(true);
+            sessionDatabase.commit();
+            
+        }else {
+            logger.error("Registration to the lift-server failed.");
+            
+            
+        }
     }
     
     /*

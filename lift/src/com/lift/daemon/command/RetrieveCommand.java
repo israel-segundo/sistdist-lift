@@ -2,7 +2,6 @@ package com.lift.daemon.command;
 
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
-import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
