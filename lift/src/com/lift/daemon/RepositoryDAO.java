@@ -80,7 +80,10 @@ public class RepositoryDAO {
         boolean isLoaded = false;
         logger.info("Repo-Database: Loading repository state from file...");
         
-        if(!databaseFile.exists()) return true;
+        if(!databaseFile.exists()){
+            logger.error("Repository file does not exist.");
+            return true;
+        }
         
         try (Reader reader = new FileReader(databaseFile)) {
             

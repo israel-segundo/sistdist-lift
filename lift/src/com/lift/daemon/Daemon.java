@@ -48,7 +48,6 @@ public class Daemon {
         initSession();
         initRepository();
         initSharedDirectory();
-        registerIntoServer();
         
         spawnHeartbeatService();
         
@@ -62,7 +61,9 @@ public class Daemon {
             sessionDatabase.commit();
             
             logger.info(String.format("Daemon listening on port: [%d]", portNumber));
-                
+            
+            registerIntoServer();
+            
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 service.execute(new DaemonTask(clientSocket, repositoryDatabase, sessionDatabase));
@@ -99,6 +100,8 @@ public class Daemon {
     
     
     private static void spawnHeartbeatService(){
+        
+        repositoryDatabase.commit();
         
         HearthBeatService heartBeatService = new HearthBeatService(sessionDatabase, repositoryDatabase);
         new Thread(heartBeatService).start();
@@ -150,11 +153,16 @@ public class Daemon {
         if(sessionFile.exists()) {
             // Load session from file
             sessionDatabase.reload();
+            
+            logger.info("sessionDatabase : " + sessionDatabase);
+            logger.info("sessionDatabase.getSession() : " + sessionDatabase.getSession());
+            logger.info("sessionDatabase.getGUID() : " + sessionDatabase.getSession().getGUID());
+            
             guid = sessionDatabase.getSession().getGUID();
             portNumber = sessionDatabase.getSession().getDaemonPort();
                         
         } else {
-            // TODO: Connect to server...
+                        
             // if connect is successful, do below
             SessionFile session = new SessionFile();
             String timestamp = CommonUtility.generateDate();
@@ -176,13 +184,18 @@ public class Daemon {
     }
     
     private static void initSessionDatabase() {
+        logger.info("init session database");
         sessionDatabase = new SessionDAO(sessionFile);
         sessionDatabase.getSession().setSharedDirRoute(sharedDirPath);
+        logger.info("end init session database");
+
     }
     
     private static void initRepositoryDatabase() {
+        logger.info("init repo database");
         logger.info("Repository file is: " + repositoryFile.getAbsolutePath());
         repositoryDatabase = new RepositoryDAO(repositoryFile);
+        logger.info("end init repo  database");
     }
     
     private static void initConfigDirectory() {

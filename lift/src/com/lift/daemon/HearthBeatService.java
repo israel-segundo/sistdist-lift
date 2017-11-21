@@ -5,6 +5,7 @@ import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import com.lift.common.ServerConsumer;
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 public class HearthBeatService implements Runnable{
 
@@ -26,6 +27,8 @@ public class HearthBeatService implements Runnable{
     
     @Override
     public void run() {
+        
+        
         // Send heartbeat
         while(true){
             
@@ -42,13 +45,17 @@ public class HearthBeatService implements Runnable{
                 Daemon.isConnected = false;
             }
             
+            logger.info("Connected to server");
+            
             // Reload databases
-            this.repositoryDatabase.reload();
-            this.sessionDatabase.reload();
+            repositoryDatabase.reload();
+            sessionDatabase.reload();
             
             // Send heartbeat signal
             boolean heartbeatAcknowledged = serverConsumer.sendHeartBeat(sessionDatabase.getSession().getGUID(), 
-                                                                         this.repositoryDatabase.getFileCount());
+                                                                         repositoryDatabase.getFileCount());
+            
+            logger.info("Was heartbeat ack? " + heartbeatAcknowledged );
             
             if(heartbeatAcknowledged){
                 logger.info("Heartbeat signal was acknowledged by the server");
@@ -59,12 +66,15 @@ public class HearthBeatService implements Runnable{
                 Daemon.isConnected = false;
             }
             
+            
             saveConnectionStatus();
             
             
+            logger.info(String.format("Attempting to sleep current heartbeat thread for %d seconds", refreshRateInSeconds));
+            
             try{
-                Thread.currentThread().wait(refreshRateInSeconds * 1000);
-                
+                TimeUnit.SECONDS.sleep(refreshRateInSeconds);
+
             } catch(Exception ex){
                 logger.error("Cannot sleep heartbeat thread!");
                 ex.printStackTrace();
@@ -74,7 +84,9 @@ public class HearthBeatService implements Runnable{
     
     private void saveConnectionStatus(){
         
-        this.sessionDatabase.getSession().setIsConnected(Daemon.isConnected);
-        this.sessionDatabase.commit();
+        logger.info("Attempting saving connection status ...");
+        sessionDatabase.getSession().setIsConnected(Daemon.isConnected);
+        sessionDatabase.commit();
+
     }
 }
