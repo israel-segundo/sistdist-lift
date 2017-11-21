@@ -74,10 +74,8 @@ public class DaemonTask implements Runnable {
                 break;
                 
             case Operation.GET:
-                
-                    
                 GetCommand getCommand = new GetCommand(firstParameter, sock);
-                Result result = getCommand.getMetadataFromRemoteClient(firstParameter);
+                Result result         = getCommand.getMetadataFromRemoteClient(firstParameter);
                 
                 if (result.getReturnCode() != Daemon.SUCCESS) {
                     Daemon.terminateDownload = true;
@@ -97,8 +95,10 @@ public class DaemonTask implements Runnable {
                 return result;
                 
             case Operation.CLIENT_READY:
-                
-                Daemon.isClientReady = Boolean.getBoolean(firstParameter);
+                String clientReady        = parameters[0];
+                String downloadPort       = parameters[1];
+                Daemon.isClientReady      = Boolean.getBoolean(clientReady);
+                Daemon.downloadPortNumber = Integer.parseInt(downloadPort);
                 
                 return new Result();
                 

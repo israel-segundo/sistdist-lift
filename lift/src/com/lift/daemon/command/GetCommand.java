@@ -27,7 +27,6 @@ public class GetCommand {
     private static final Logger logger  = new Logger(GetCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private String ufl                = null;
-    private Socket localSock          = null;
     private String metadataJson       = null;
     private boolean isReadyToTransfer = false;
     private long totalBytes           = 0;
@@ -37,7 +36,6 @@ public class GetCommand {
     
     public GetCommand(String ufl, Socket sock) {
         this.ufl  = ufl;
-        this.localSock = sock;
     }
     
     public void setMetadata(String metadataJson) {
@@ -51,11 +49,9 @@ public class GetCommand {
         String clientGUID   = decodedUFL[0];
         String fileID       = decodedUFL[1];
         
-        // Connect to server here and get below info... this is done inside getMetadataFromRemoteClient
-        
         // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
         while (Daemon.isClientReady == false) {
-            // Wait until the client is ready to receive petitions (longs) from this object...
+            // Wait until the local client is ready start the handling the download...
         }
         
         if(Daemon.terminateDownload) return result;
@@ -70,7 +66,7 @@ public class GetCommand {
         totalBytes = repositoryFile.getSize();
 
         // This will start sending longs (for progress bar) to client (which now is acting like a server)
-        result = executeRetrieveInRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName, Daemon.localClientSocket);
+        result = retrieveFileFromRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName);
 
 
         
@@ -110,7 +106,7 @@ public class GetCommand {
         String clientGUID   = decodedUFL[0];
         String fileID       = decodedUFL[1];
         
-        
+        // Get client details from server
         getRemoteClientConnectionDetails(clientGUID);
         
         
@@ -146,14 +142,17 @@ public class GetCommand {
     }
     
     
-    // TODO: Can we refactor this method with the one in ClientManager?
-    public Result executeRetrieveInRemoteClient(String hostname, int port, String fileID, String fileName, Socket localSock) {
+    private Result retrieveFileFromRemoteClient(String hostname, int port, String fileID, String fileName) {
         Result result       = new Result();
         boolean isFileSaved = false;
         long current        = 0;
         
-        try (Socket remoteSock            = new Socket(hostname, port);
+        try (// localSock: used for sending progress
+             Socket localSock             = new Socket(hostname, Daemon.downloadPortNumber);
              ObjectOutputStream localOut  = new ObjectOutputStream(localSock.getOutputStream());
+                
+            // remoteSock: used for getting file bytes
+             Socket remoteSock            = new Socket(hostname, port);
              ObjectOutputStream remoteOut = new ObjectOutputStream(remoteSock.getOutputStream());
              ObjectInputStream remoteIn   = new ObjectInputStream(remoteSock.getInputStream());
         ) {
@@ -173,16 +172,16 @@ public class GetCommand {
             
             
             while (current != totalBytes && (length = remoteIn.read(buffer)) > 0){
-                // report to client launcher the bytes read for progress bar
                 current = current + length;
                 
+                // report to client launcher the bytes read for progress bar
                 if(localSock.isConnected()){
                     localOut.writeLong(current);
                 }
                 
                 logger.info("Received from client [" + hostname + "] " + length + " bytes.");
                 
-    	    	// write buffer to filesystem here...
+    	    	// write buffer to filesystem
                 try {
                     fos.write(buffer, 0, length);
                     isFileSaved = true;

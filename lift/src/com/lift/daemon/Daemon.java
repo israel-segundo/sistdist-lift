@@ -45,6 +45,7 @@ public class Daemon {
     public static boolean isClientReady              = false;
     public static Socket localClientSocket           = null;
     public static boolean terminateDownload          = false;
+    public static int downloadPortNumber             = 0;
         
     public static void main(String[] args) {
         
