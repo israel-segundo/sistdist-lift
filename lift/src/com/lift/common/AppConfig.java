@@ -11,14 +11,15 @@ import java.util.Properties;
 
 public class AppConfig {
 
-    private static final Logger logger = new Logger(AppConfig.class);
+    //private static final Logger logger = new Logger(AppConfig.class);
     
     private Properties properties;
     private final String configFilePath = "lift-config.properties";
+    public static String logFilePath = null;
     
     public AppConfig(){
         
-        logger.info("Loading properties file.");
+        //logger.info("Loading properties file.");
         properties = new Properties();
 
         loadPropertiesFromDisk();
@@ -33,11 +34,11 @@ public class AppConfig {
         
         try{
             input = AppConfig.class.getClassLoader().getResourceAsStream(configFilePath);
-            logger.info("Input:" + input);
+            //logger.info("Input:" + input);
             properties.load(input);
             
         } catch(Exception exception){
-            logger.error("Error at loading configuration file." + input);
+            System.out.println("Error at loading configuration file: " + input);
             exception.printStackTrace(System.err);
             
         } finally{
@@ -73,6 +74,7 @@ public class AppConfig {
     public String toString(){
         return getPropertyAsString(properties);
     }
+    
     private String getPropertyAsString(Properties prop) {    
         
         StringWriter writer = new StringWriter();

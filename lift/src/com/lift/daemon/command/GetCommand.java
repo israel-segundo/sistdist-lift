@@ -2,6 +2,7 @@ package com.lift.daemon.command;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
@@ -21,7 +22,7 @@ import java.net.UnknownHostException;
 
 public class GetCommand {
     
-    private static final Logger logger  = new Logger(GetCommand.class);
+    private static final Logger logger  = new Logger(GetCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private String ufl                = null;
     private Socket localSock          = null;

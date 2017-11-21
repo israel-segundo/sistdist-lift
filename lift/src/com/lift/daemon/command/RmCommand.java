@@ -1,14 +1,17 @@
 package com.lift.daemon.command;
 
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
+import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
+import java.io.File;
 
 
 public class RmCommand implements LiftCommand {
     
-    private static final Logger logger  = new Logger(RmCommand.class);
+    private static final Logger logger  = new Logger(RmCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private RepositoryDAO repositoryDatabase  = null;
     private String fileID                     = null;

@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class ClientManager {
     
-    private static final Logger logger          = new Logger(ClientManager.class);
+    private static Logger logger                = null;
     private static String clientVersion         = "1.0.0";
     private static String clientBuildDate       = Calendar.getInstance().getTime().toString();
     private static final int SUCCESS            = 0;
@@ -43,6 +43,7 @@ public class ClientManager {
         
         loadConfig();
         loadSession();
+        
     }
     
     private void loadConfig(){
@@ -52,6 +53,9 @@ public class ClientManager {
         clientVersion   = appConfig.getProperty("lift.build.version", clientVersion);
         daemonHostname  = appConfig.getProperty("lift.daemon.hostname", daemonHostname);
         clientBuildDate = appConfig.getProperty("lift.build.date", clientBuildDate);
+        
+        AppConfig.logFilePath = appConfig.getProperty("lift.config.dir");
+        logger = new Logger(ClientManager.class, AppConfig.logFilePath + File.separator + "lift.log");
     }
     
     private void loadSession(){
@@ -189,7 +193,7 @@ public class ClientManager {
         
         if(result.getReturnCode() == SUCCESS) {
             SessionFile session = (SessionFile) result.getResult();
-            System.out.format("%-10s%-35s\n", "User GUID is:", session.getGUID());
+            System.out.format("%-10s%-35s\n", "User GUID is: ", session.getGUID());
             boolean isConnected = session.getIsConnected();
             String state = (isConnected) ? 
                             Logger.ANSI_GREEN + "CONNECTED" + Logger.ANSI_RESET : 

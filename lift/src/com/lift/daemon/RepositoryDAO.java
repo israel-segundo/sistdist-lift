@@ -2,6 +2,7 @@ package com.lift.daemon;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import java.io.File;
 import java.io.FileReader;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 public class RepositoryDAO {
 
-    private static final Logger logger  = new Logger(RepositoryDAO.class);
+    private static final Logger logger  = new Logger(RepositoryDAO.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private File databaseFile                     = null;
     private Map<String, RepositoryFile> filesMap  = null;

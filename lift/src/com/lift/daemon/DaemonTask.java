@@ -1,5 +1,6 @@
 package com.lift.daemon;
 
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.daemon.command.AddCommand;
@@ -17,10 +18,11 @@ import com.lift.daemon.command.MetaCommand;
 import com.lift.daemon.command.RetrieveCommand;
 import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
+import java.io.File;
 
 public class DaemonTask implements Runnable {
     
-    private static final Logger logger  = new Logger(DaemonTask.class);
+    private static final Logger logger  = new Logger(DaemonTask.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     Socket sock;
     RepositoryDAO repositoryDB;

@@ -1,22 +1,22 @@
 package com.lift.daemon.command;
 
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
+import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 
 public class RetrieveCommand implements LiftCommand {
     
-    private static final Logger logger  = new Logger(RetrieveCommand.class);
+    private static final Logger logger  = new Logger(RetrieveCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private String fileID                    = null;
     private RepositoryDAO repositoryDatabase = null;

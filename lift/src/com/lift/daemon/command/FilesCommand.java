@@ -1,9 +1,12 @@
 
 package com.lift.daemon.command;
 
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
+import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.Result;
+import java.io.File;
 
 
 /*
@@ -11,7 +14,7 @@ import com.lift.daemon.Result;
  */
 public class FilesCommand implements LiftCommand{
     
-    private static final Logger logger  = new Logger(FilesCommand.class);
+    private static final Logger logger  = new Logger(FilesCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
 
     private RepositoryDAO repositoryDatabase = null;
   

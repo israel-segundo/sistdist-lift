@@ -63,7 +63,7 @@ public class CommonUtility {
         
         Set<Map.Entry<String, RepositoryFile>> fileSet = map.entrySet();
         int[] elementLength                            = new int[5];
-        int[] standardLength                           = {30, 20, 20, 20, 6};
+        int[] standardLength                           = {30, 20, 20, 15, 6};
         StringBuilder format                           = new StringBuilder();
         
         fileSet.forEach((entry) -> {

@@ -1,7 +1,9 @@
 package com.lift.daemon.command;
 
+import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
+import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -11,7 +13,7 @@ import java.util.Base64;
 
 public class ShareCommand implements LiftCommand {
 
-    private static final Logger logger  = new Logger(ShareCommand.class);
+    private static final Logger logger  = new Logger(ShareCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private RepositoryDAO repositoryDatabase  = null;
     private SessionDAO sessionDatabase        = null;

@@ -21,11 +21,11 @@ import java.util.concurrent.Executors;
  */
 public class Daemon {
        
-    private static final Logger logger  = new Logger(Daemon.class);
+    private static Logger logger        = null;
 
     private static File sessionFile     = null;
     private static File repositoryFile  = null;
-    private static File configDirFile   = null;
+    public static File configDirFile    = null;
     public static String sharedDirPath  = null;
     
     public static File sharedDirFile    = null;
@@ -85,7 +85,8 @@ public class Daemon {
         String sharedDir    = appConfig.getProperty("lift.shared.dir");
         sharedDirFile       = new File(sharedDir);
         
-        
+        AppConfig.logFilePath = configDirFile.getAbsolutePath();
+        logger = new Logger(Daemon.class, AppConfig.logFilePath + File.separator + "lift.log");
         
     }
     

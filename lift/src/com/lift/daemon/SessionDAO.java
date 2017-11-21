@@ -3,6 +3,7 @@ package com.lift.daemon;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lift.client.ClientManager;
+import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import java.io.File;
 import java.io.FileReader;
@@ -20,7 +21,7 @@ import java.lang.reflect.Type;
  */
 public class SessionDAO {
     
-    private static final Logger logger  = new Logger(SessionDAO.class);
+    private static final Logger logger  = new Logger(SessionDAO.class, AppConfig.logFilePath + File.separator + "lift.log");
 
     private File sessionFile    = null;
     private SessionFile session = null;

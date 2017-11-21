@@ -1,6 +1,7 @@
 
 package com.lift.common;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import org.json.JSONObject;
 
 public class ServerConsumer {
 
-    private static final Logger logger  = new Logger(ServerConsumer.class);
+    private static final Logger logger  = new Logger(ServerConsumer.class, "server.log");
     private static AppConfig appConfig  = null;
 
     private String serverHostname   = null;
