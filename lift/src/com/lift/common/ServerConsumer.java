@@ -55,7 +55,7 @@ public class ServerConsumer {
         return this.serverHostname + ":" + Integer.toString(this.serverPort);
     }
     
-    public boolean register(String clientId, int port, int numberFilesShared){
+    public boolean register(String clientId, String ipAddress, String hostname, int port, int numberFilesShared){
         
         /* Payload
             {
@@ -67,6 +67,9 @@ public class ServerConsumer {
         
         String registerEndpoint = getServerUrl() + "/register";
         JSONObject payloadObj   = new JSONObject();
+        
+        payloadObj.put("ip_addr", ipAddress);
+        payloadObj.put("hostname", hostname);
         payloadObj.put("clientGUID", clientId);
         payloadObj.put("port", Integer.toString(port));
         payloadObj.put("numberFilesShared", Integer.toString(numberFilesShared));
@@ -264,7 +267,7 @@ public class ServerConsumer {
             }
             
             
-            boolean registered = serverConsumer.register("mahfoobah", 3244, 1);
+            boolean registered = serverConsumer.register("mahfoobah", "localhost", "127.0.0.1", 3244, 1);
             
             System.out.println("Maafoobah registered? " + registered);
             

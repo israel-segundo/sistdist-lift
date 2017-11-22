@@ -6,8 +6,10 @@ import com.lift.common.Logger;
 import com.lift.common.ServerConsumer;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -139,7 +141,26 @@ public class Daemon {
         
         
         // Register current client into server
+        String hostname = "";
+        String ipAddress = "";
+        InetAddress ip;
+
+        try {
+            ip = InetAddress.getLocalHost();
+            ipAddress = ip.getHostAddress();
+            hostname = ip.getHostName();
+            System.out.println("Your current IP address : " + ip);
+            System.out.println("Your current Hostname : " + hostname);
+ 
+        } catch (UnknownHostException e) {
+ 
+            logger.error("Unable to get local ip and hostname");
+            logger.error(e.getMessage());
+            
+        }
         boolean wasRegistered = serverConsumer.register(sessionDatabase.getSession().getGUID(), 
+                                                        ipAddress,
+                                                        hostname,
                                                         sessionDatabase.getSession().getDaemonPort(),
                                                         repositoryDatabase.getFileCount());
         
