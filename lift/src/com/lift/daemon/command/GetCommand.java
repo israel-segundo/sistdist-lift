@@ -28,11 +28,11 @@ public class GetCommand implements Runnable {
     
     private String ufl                = null;
     private String metadataJson       = null;
-    private Daemon.Sem sem            = null;
+    private volatile Daemon.Sem sem   = null;
     private long totalBytes           = 0;
 
     private String serverHostIpAddress    = null;
-    private Integer serverHostPort        = null;
+    private int serverHostPort            = 0;
     
     public GetCommand(String ufl, Daemon.Sem s) {
         this.ufl  = ufl;
@@ -204,6 +204,7 @@ public class GetCommand implements Runnable {
             
         } catch (IOException e) {
             logger.error("Can not connect to remote Lift client at [" + hostname + ":" + port + "]");
+            e.printStackTrace();
             result.setReturnCode(2);
             result.setMessage("Daemon: Can not connect to remote Lift client. Client might not be available.");
         } 

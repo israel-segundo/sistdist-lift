@@ -28,7 +28,7 @@ public class DaemonTask implements Runnable {
     Socket sock;
     RepositoryDAO repositoryDB;
     SessionDAO sessionDB;
-    Daemon.Sem sem;
+    volatile Daemon.Sem sem;
     
     public DaemonTask(Daemon.Sem sem, Socket sock, RepositoryDAO repositoryDB, SessionDAO sessionDB){
         this.sock         = sock;
@@ -103,21 +103,21 @@ public class DaemonTask implements Runnable {
             case Operation.CLIENT_READY:
                 String clientReady        = parameters[0];
                 String downloadPort       = parameters[1];
-                Daemon.isClientReady      = Boolean.getBoolean(clientReady);
+                Daemon.isClientReady      = Boolean.valueOf(clientReady);
                 Daemon.downloadPortNumber = Integer.parseInt(downloadPort);
                 
-                sem.isReady = Boolean.getBoolean(clientReady);
+                sem.isReady = Boolean.valueOf(clientReady);
                 sem.downloadPort = Integer.parseInt(downloadPort);
                 
-                logger.info("isClientReady: " + Daemon.isClientReady);
-                logger.info("downloadPortNumber: " + Daemon.downloadPortNumber);
+                logger.info("isClientReady: " + sem.isReady);
+                logger.info("downloadPortNumber: " + sem.downloadPort);
                 
                 return new Result();
                 
             case Operation.TERMINATE_DOWNLOAD:
                 
-                Daemon.terminateDownload = Boolean.getBoolean(firstParameter);
-                sem.terminate = Boolean.getBoolean(firstParameter);
+                Daemon.terminateDownload = Boolean.valueOf(firstParameter);
+                sem.terminate = Boolean.valueOf(firstParameter);
                 
                 return new Result();
                 

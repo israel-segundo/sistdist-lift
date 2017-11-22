@@ -24,9 +24,9 @@ import java.util.concurrent.Executors;
 public class Daemon {
     
     public static class Sem {
-        public boolean isReady   = false;
-        public boolean terminate = false;
-        public int downloadPort  = 0;
+        public volatile boolean isReady   = false;
+        public volatile boolean terminate = false;
+        public volatile int downloadPort  = 0;
     }
        
     private static Logger logger        = null;
@@ -52,7 +52,7 @@ public class Daemon {
     public static Socket localClientSocket           = null;
     public static volatile boolean terminateDownload = false;
     public static volatile int downloadPortNumber    = 0;
-    public static Sem sem = new Sem();
+    public static volatile Sem sem = new Sem();
         
     public static void main(String[] args) {
         
