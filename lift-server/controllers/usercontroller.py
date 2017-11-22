@@ -93,6 +93,8 @@ class UserController:
         #
         expected_fields = [
             {'name' :'clientGUID'       , 'type' : 'string' },
+            {'name' :'ip_addr'       , 'type' : 'string' },
+            {'name' :'hostname'       , 'type' : 'string' },
             {'name' :'port'             , 'type' : 'int' },
             {'name' :'numberFilesShared', 'type' : 'int' }
         ]
@@ -119,7 +121,7 @@ class UserController:
         user_dao = UserDao()
         origin   = request.headers.get('X-Forwarded-For', request.remote_addr)
 
-        new_user = user_dao.register_new(c_id=payload['clientGUID'], ip_addr=origin, port=payload['port'], number_files_shared=payload['numberFilesShared'])
+        new_user = user_dao.register_new(c_id=payload['clientGUID'], hostname=payload['hostname'],ip_addr=payload['ip_addr'], port=payload['port'], number_files_shared=payload['numberFilesShared'])
 
         if(new_user in [None]):
             return self.build_response_json('error','Client {0} could not be registered in database. Check with admin'.format(payload['clientGUID']))

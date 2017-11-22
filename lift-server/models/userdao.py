@@ -52,7 +52,7 @@ class UserDao:
         return users_registered
 
     # ---------------------------------------------------------------------------------------------------------------------
-    def register_new(self, c_id, ip_addr, port, number_files_shared):
+    def register_new(self, c_id, hostname, ip_addr, port, number_files_shared):
         """
             Given client id details, create a new document in the database.
             If it is created, return the updated document leaf.
@@ -67,6 +67,7 @@ class UserDao:
 
         new_user = {
             'c_id'                : c_id,
+            'hostname'            : hostname,
             'ip_addr'             : ip_addr,
             'port'                : port,
             'number_files_shared' : number_files_shared,
@@ -202,8 +203,9 @@ class UserDao:
                                                                         "$inc": { "hits" : 1}})
 
                 connection_info = {
-                    'ip'   : target_user['ip_addr'],
-                    'port' : target_user['port']
+                    'ip'        : target_user['ip_addr'],
+                    'hostname'  : target_user['hostname'],
+                    'port'      : target_user['port']
                 }
 
         except Exception as e:
