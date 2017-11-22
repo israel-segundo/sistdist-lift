@@ -273,43 +273,52 @@ public class ClientManager {
         ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
         
         // TODO:  VERY IMPORTANT Implement timeout mech
-        ServerSocket sock;
+        ServerSocket clientDaemonSocket;
         try {
-            sock             = new ServerSocket(0);
-            int downloadPort = sock.getLocalPort();
-            logger.info("PROGRESS PORT is: " + downloadPort);
+            clientDaemonSocket                      = new ServerSocket(0);
+            int progressBarServerPort               = clientDaemonSocket.getLocalPort();
             
-            while (true) {
+            logger.info("Progressbar socket listening on port : " + progressBarServerPort);
+            
+            
+            // Send client port to daemon so they can send delta signals
+            sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] { "true", String.valueOf(progressBarServerPort) }));
+
+            // -----------------------------------------------------------------------
+            //  Accept connection from daemon
+            Socket clientSocket = clientDaemonSocket.accept();
+
+            logger.info("Established a connection [client->daemon]");
+
+            try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                 ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());) {
+
+                boolean isTransmissionActive = true;
+                long bytesTransmitted        = 0;
                 
-                
-                logger.info("Socket set at " + downloadPort);
-                sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] { "true", String.valueOf(downloadPort) }));
-                
-                Socket clientSocket = sock.accept();
-                
-                logger.info("Accepted a request...");
-                
-                try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                     ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());) {
+                while(isTransmissionActive){
                     
-                    
-                    delta = in.readLong();
+                    delta            = in.readLong();
+                    bytesTransmitted = bytesTransmitted + delta;
                     bar.updateProgress(delta);
 
-                    if (delta >= totalDataSize) {
-                        System.out.printf("\n\nDownload is complete.\n");
-                        break;
-                    }
-
-                } catch (IOException ex) {
-                    isErrorPresent = true;
-                    sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false", "0"}));
-                    System.out.printf("\n\nError: The connection was interrupted.\n");
-                    break;
+                    logger.info("Read bytes : " + delta);
+                    logger.info(String.format("Progress bar %s/%s", bytesTransmitted, totalDataSize));
+                    
+                    isTransmissionActive = (bytesTransmitted < totalDataSize);
                 }
+
+            } catch (IOException ex) {
+                isErrorPresent = true;
+                ex.printStackTrace();
+                sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false", "0"}));
+                System.out.printf("\n\nError: The connection was interrupted.\n");
             }
-        } catch (IOException ex) {
             
+            clientSocket.close();
+            
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
         
         

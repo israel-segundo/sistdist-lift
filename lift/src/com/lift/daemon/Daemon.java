@@ -28,7 +28,7 @@ public class Daemon {
     public static class Sem {
         public volatile boolean isReady   = false;
         public volatile boolean terminate = false;
-        public volatile int downloadPort  = 0;
+        public volatile int progressBarServerPort  = 0;
     }
        
     private static Logger logger        = null;
@@ -53,7 +53,7 @@ public class Daemon {
     public static volatile boolean isClientReady     = false;
     public static Socket localClientSocket           = null;
     public static volatile boolean terminateDownload = false;
-    public static volatile int downloadPortNumber    = 0;
+    public static volatile int progressBarServerPort    = 0;
     public static volatile Sem sem = new Sem();
         
     public static void main(String[] args) {

@@ -94,23 +94,23 @@ public class DaemonTask implements Runnable {
                 getCommand.setMetadata(metaJson);
                 
                 Thread downloadFile = new Thread(getCommand);
-                
                 downloadFile.start();
+                
                 logger.info("PID DAEMONTASK: " + downloadFile.getId());
                 
                 return result;
                 
             case Operation.CLIENT_READY:
                 String clientReady        = parameters[0];
-                String downloadPort       = parameters[1];
+                String progressBarServerPort       = parameters[1];
                 Daemon.isClientReady      = Boolean.valueOf(clientReady);
-                Daemon.downloadPortNumber = Integer.parseInt(downloadPort);
+                Daemon.progressBarServerPort = Integer.parseInt(progressBarServerPort);
                 
                 sem.isReady = Boolean.valueOf(clientReady);
-                sem.downloadPort = Integer.parseInt(downloadPort);
+                sem.progressBarServerPort = Integer.parseInt(progressBarServerPort);
                 
                 logger.info("isClientReady: " + sem.isReady);
-                logger.info("downloadPortNumber: " + sem.downloadPort);
+                logger.info("progressBarServerPort: " + sem.progressBarServerPort);
                 
                 return new Result();
                 
@@ -126,6 +126,8 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RETRIEVE:
+                // TODO:  Extends retrieve functionality
+                
                 command = new RetrieveCommand(firstParameter, repositoryDB, sock);
                 break;
                 

@@ -2,6 +2,9 @@ package com.lift.daemon.command;
 
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
+import static com.lift.daemon.Daemon.sem;
+import com.lift.daemon.DaemonTask;
+import com.lift.daemon.FileProviderServer;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
@@ -10,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 
@@ -29,35 +33,45 @@ public class RetrieveCommand implements LiftCommand {
 
     @Override
     public Result execute() {
-        Result result = new Result();
-        byte[] buffer = new byte[1024_000];
         
+        Result result       = new Result();
+        int fileServerPort  = startFileProviderServer();
         
-        RepositoryFile repoFile = repositoryDatabase.getFileByID(fileID);
-        String fileName         = repoFile.getName();
-    	File file               = new File(fileName);
-        
-        try (ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream()))
-        {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedInputStream bis         = new BufferedInputStream(fileInputStream);
-            int length;
-    	    while ((length = bis.read(buffer)) > 0){
-    	    	out.write(buffer, 0, length);
-    	    }
+        if(-1 == fileServerPort){
+            logger.error("Unable to start the file server");
+            result.setMessage("error");
             
-            bis.close();
-            fileInputStream.close();
-            
-        } catch (IOException e) {
-            logger.error("Could not read the requested file: " + fileName);
-            result.setReturnCode(1);
-            result.setMessage("Daemon: Could not read the file from client location.");
+        } else{
+            logger.info(String.format("It seems that the remote file provider was opened in port %d", fileServerPort));
+            result.setMessage("success");
         }
         
-        
-        
+        result.setReturnCode(fileServerPort);
+
         return result;
     }
     
+    
+    
+    public int startFileProviderServer(){
+        
+        int fileProviderServerPort  = -1;
+        String filePath = repositoryDatabase.getFileByID(fileID).getName();
+
+        try{
+            ServerSocket serverSocket   = new ServerSocket(0);
+            fileProviderServerPort      = serverSocket.getLocalPort();            
+            
+            Thread fileProviderServerThread = new Thread(new FileProviderServer(serverSocket,filePath));
+            fileProviderServerThread.start();
+            
+            logger.info("Spawned fileserver socket server. Listening in port: " + fileProviderServerPort);
+            
+        } catch(Exception ex){
+            logger.error("Exception caught on  startFileProviderServer");
+            ex.printStackTrace();
+        }
+
+        return fileProviderServerPort;
+    }
 }

@@ -14,12 +14,14 @@ import com.lift.daemon.Transaction;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class GetCommand implements Runnable {
@@ -41,39 +43,7 @@ public class GetCommand implements Runnable {
     
     public void setMetadata(String metadataJson) {
         this.metadataJson = metadataJson;
-    }
-    
-    public Result execute() {
-        Result result       = new Result();
-        
-        String[] decodedUFL = CommonUtility.decodeUFL(ufl);
-        String clientGUID   = decodedUFL[0];
-        String fileID       = decodedUFL[1];
-        
-        // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
-        while (sem.isReady == false) {
-            // Wait until the local client is ready start the handling the download...
-        }
-        logger.info("Finished Waiting...");
-        if(sem.terminate) return result;
-                      
-        Gson gson = new Gson();
-        Type type = new TypeToken<RepositoryFile>() {}.getType();
-        RepositoryFile repositoryFile = gson.fromJson(metadataJson, type);
-
-        File f = new File(repositoryFile.getName());
-        String fileName = f.getName();
-
-        totalBytes = repositoryFile.getSize();
-
-        // This will start sending longs (for progress bar) to client (which now is acting like a server)
-        result = retrieveFileFromRemoteClient(this.serverHostIpAddress, this.serverHostPort, fileID, fileName);
-
-
-        
-        return result;
-    }
-    
+    }  
     
     public void getRemoteClientConnectionDetails(String clientGUID){
     
@@ -143,67 +113,110 @@ public class GetCommand implements Runnable {
     }
     
     
-    private Result retrieveFileFromRemoteClient(String hostname, int port, String fileID, String fileName) {
+    private Result retrieveFileFromRemoteClient(String remoteHostname, int remotePort, String fileID, String fileName) {
         Result result       = new Result();
         boolean isFileSaved = false;
         long current        = 0;
         
+        try{
+            logger.info("Waiting for 5 seconds");
+            TimeUnit.SECONDS.sleep(5);
+        }catch(Exception ex){
+            ex.printStackTrace();
+        }
+        
         try (// localSock: used for sending progress
-             Socket localSock             = new Socket(hostname, sem.downloadPort);
-             ObjectOutputStream localOut  = new ObjectOutputStream(localSock.getOutputStream());
+             Socket progressBarSock             = new Socket("localhost", sem.progressBarServerPort);
+             ObjectOutputStream progressBarOut  = new ObjectOutputStream(progressBarSock.getOutputStream());
                 
-            // remoteSock: used for getting file bytes
-             Socket remoteSock            = new Socket(hostname, port);
-             ObjectOutputStream remoteOut = new ObjectOutputStream(remoteSock.getOutputStream());
-             ObjectInputStream remoteIn   = new ObjectInputStream(remoteSock.getInputStream());
+            // remoteSock: used for getting file server port
+             Socket retrieveOperationSock            = new Socket(remoteHostname, remotePort);
+             ObjectOutputStream retrieveOperationOut = new ObjectOutputStream(retrieveOperationSock.getOutputStream());
+             ObjectInputStream remoteOperationOut    = new ObjectInputStream(retrieveOperationSock.getInputStream());
         ) {
             
+            // ------------------------------------------------------------------------------------------------------------
+            //  Retrieve operation to obtain the file provider port
+            // ------------------------------------------------------------------------------------------------------------
+            logger.info("Attempting to initiate a RETRIEVE operation with a remote server.");
             Transaction transaction = new Transaction(Operation.RETRIEVE, new String []{fileID});
-            logger.info("Trying to establish a connection to the client: " + hostname + ":" + port);
-
-            // Send the RETRIEVE operation to notify remote client to send bytes of data
-            remoteOut.writeObject(transaction);
+            retrieveOperationOut.writeObject(transaction);
             
+            // Read fileprovider port
+            Result retrieveResult = (Result)remoteOperationOut.readObject();
             
-            // Read actual bytes from remote client
-            byte[] buffer = new byte[1024_000]; // 100 kb
-            int length;            
-            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.separator + fileName);
-            FileOutputStream fos = new FileOutputStream(writeLocation);
+            logger.info(String.format("RETRIEVE response: statusCode=%s, message=%s",retrieveResult.getReturnCode(),retrieveResult.getMessage()));
             
+            int fileProviderPort = retrieveResult.getReturnCode();
             
-            while (current != totalBytes && (length = remoteIn.read(buffer)) > 0){
-                current = current + length;
-                
-                // report to client launcher the bytes read for progress bar
-                if(localSock.isConnected()){
-                    localOut.writeLong(current);
-                }
-                
-                logger.info("Received from client [" + hostname + "] " + length + " bytes.");
-                
-    	    	// write buffer to filesystem
-                try {
-                    fos.write(buffer, 0, length);
-                    isFileSaved = true;
-                } catch (IOException e) {
-                    isFileSaved = false;
-                    break;
-                }
-                
-    	    }
-            
-            if (isFileSaved) {
-                result.setReturnCode(0);
-                result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
-            } else {
-                result.setReturnCode(1);
-                result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() +
-                        File.pathSeparator + fileName + " could not be saved.");
+            if( fileProviderPort == -1){
+                // error
+                logger.error("File provider server was not started");
             }
             
-        } catch (IOException e) {
-            logger.error("Can not connect to remote Lift client at [" + hostname + ":" + port + "]");
+            logger.error("File provider server was started. Listening remotely on port " + fileProviderPort);
+            
+
+            // ------------------------------------------------------------------------------------------------------------
+            //  Transmission of data
+            // ------------------------------------------------------------------------------------------------------------              
+            
+            try(Socket fileTransferSock            = new Socket(remoteHostname, fileProviderPort);
+                ObjectOutputStream fileTransferOut = new ObjectOutputStream(fileTransferSock.getOutputStream());
+                InputStream  fileTransferIn   = fileTransferSock.getInputStream();){
+                
+                
+                logger.info(String.format("Opening connection to file provider server %s and port %d", remoteHostname, fileProviderPort));
+          
+                // Read actual bytes from remote client
+                byte[] buffer = new byte[2048]; // 100 kb
+                int length = -1;            
+                File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.separator + fileName);
+                FileOutputStream fos = new FileOutputStream(writeLocation);
+
+
+                while ((length = fileTransferIn.read(buffer)) != -1){
+                    
+                    current = current + length;
+
+                    // report to client launcher the bytes read for progress bar
+                    if(progressBarSock.isConnected()){
+                        progressBarOut.writeLong(current);
+                    }
+
+                    logger.info("Received from client [" + remoteHostname + "] " + length + " bytes.");
+                    logger.info(String.format("progress [%d/%d] - remaining: %d", current, totalBytes, totalBytes - current));
+                    // write buffer to filesystem
+                    try {
+                        logger.info("Writing " + length + " bytes to disk");
+                        fos.write(buffer, 0, length);
+                        isFileSaved = true;
+                    } catch (IOException e) {
+                        isFileSaved = false;
+                        break;
+                    }
+                }
+                
+                progressBarOut.flush();
+                
+                if (isFileSaved) {
+                    result.setReturnCode(0);
+                    result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
+                } else {
+                    result.setReturnCode(1);
+                    result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() +
+                            File.pathSeparator + fileName + " could not be saved.");
+                }                
+                
+            }catch (IOException e) {
+                logger.error("Can not connect to remote file provider server  at [" + remoteHostname + ":" + fileProviderPort + "]");
+                e.printStackTrace();
+                result.setReturnCode(2);
+                result.setMessage("Daemon: Cannot connect to remote peer for file download");
+            } 
+            
+        } catch (IOException | ClassNotFoundException e) {
+            logger.error("Can not connect to remote Lift client at [" + remoteHostname + ":" + remotePort + "]");
             e.printStackTrace();
             result.setReturnCode(2);
             result.setMessage("Daemon: Can not connect to remote Lift client. Client might not be available.");
