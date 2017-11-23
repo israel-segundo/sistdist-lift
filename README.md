@@ -13,7 +13,30 @@ Napster and GNUtella were analyzed from a technical point of view and some of it
 
 ## Installation
 
-TODO
+1. Download all files from this repo. Example:
+$ unzip master.zip
+
+$ ls /scratch/lift
+lift-server  lift  LICENSE  README.md
+
+2. Configure the default shared directory (where files will be downloaded) in lift-config.properties:
+$ vim lift-config.properties
+...
+lift.shared.dir=/scratch/lift/lifthome/shared
+
+3. Set the LIFT_HOME variable to point to the installation directory. Example:
+$ export LIFT_HOME=/scratch/lift/
+
+$ env | grep LIFT_HOME
+LIFT_HOME=/scratch/vsegundo/lift/lift
+
+## How to run
+
+Execute the lift/daemon-start.sh (for Linux or MacOS) or lift-start-daemon.bat (for Windows):
+$ ./lift/daemon-start.sh &
+
+Execute the client lift.sh (for Linux or MacOS) or lift.bat (for Windows):
+$ ./lift.sh --help
 
 ## Contributors
 
