@@ -1,4 +1,3 @@
-
 package com.lift.common;
 
 import java.io.BufferedWriter;
@@ -9,6 +8,12 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Class for logging all operations.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class Logger {
 
     public static final String ANSI_RESET   = "\u001B[0m";

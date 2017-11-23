@@ -1,16 +1,19 @@
-
 package com.lift.daemon.command;
 
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
-import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.Result;
 import java.io.File;
 
 
-/*
- *  List all files in local repository
+/**
+ * This class handles the Lift FILES operation:
+ * 
+ * $ lift files
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
  */
 public class FilesCommand implements LiftCommand{
     

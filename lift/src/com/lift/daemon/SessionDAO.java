@@ -2,7 +2,6 @@ package com.lift.daemon;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.lift.client.ClientManager;
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
 import java.io.File;

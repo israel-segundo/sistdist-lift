@@ -1,10 +1,7 @@
-
 package com.lift.common;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -12,6 +9,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 
+/**
+ * This class handles the Lift server operations.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class ServerConsumer {
 
     private static final Logger logger  = new Logger(ServerConsumer.class, "server.log");
@@ -99,7 +102,7 @@ public class ServerConsumer {
                                                     && !status.isEmpty()
                                                     && status.equalsIgnoreCase("success"));
                     
-                    logger.info("was client registed? " + wasClientRegistered);
+                    logger.info("Was client registered? " + wasClientRegistered);
                     return wasClientRegistered;
                 }
                 
@@ -109,8 +112,7 @@ public class ServerConsumer {
             }
             
         } catch(Exception ex){
-            logger.error("Failed to to operation on server.");
-            ex.printStackTrace();
+            logger.error("Failed to perform operation on server.");
             logger.error(ex.toString());
         }
         
@@ -233,7 +235,7 @@ public class ServerConsumer {
                                                     && !status.isEmpty()
                                                     && status.equalsIgnoreCase("success"));
                     
-                    logger.info("was heartbeat sent? " + wasHeartBeatSent);
+                    logger.info("Was heartbeat sent? " + wasHeartBeatSent);
                     return wasHeartBeatSent;
                 }
                 
@@ -244,7 +246,6 @@ public class ServerConsumer {
             
         } catch(Exception ex){
             logger.error("Failed to to operation on server.");
-            ex.printStackTrace();
             logger.error(ex.toString());
         }
         

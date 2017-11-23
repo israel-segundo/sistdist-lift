@@ -6,13 +6,17 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class FileProviderServer implements Runnable{
+/**
+ * This class handles the transmission of files between daemons.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
+public class FileProviderServer implements Runnable {
 
     private static final Logger logger  = new Logger(FileProviderServer.class, AppConfig.logFilePath + File.separator + "lift.log");
 
@@ -47,15 +51,16 @@ public class FileProviderServer implements Runnable{
                 
                 int length;
                 while ((length = bis.read(buffer, 0, buffer.length)) != -1){
-                    
                     bytesTransmitted = bytesTransmitted + length;
-                    logger.info("Transmitting " + length + " bytes");
-                    
+                    //logger.info("Transmitting " + length + " bytes");
                     out.write(buffer, 0, length);
                 }
                 
                 logger.info("Total bytes transmitted to client daemon:  " + bytesTransmitted );
+                
+                // TODO: increment the hits + 1 for the file downloaded.
 
+                // TODO: Remove this or change flag to Daemon.terminate
                 boolean flag = true;
                 while(flag){
                     flag = flag;
@@ -66,7 +71,7 @@ public class FileProviderServer implements Runnable{
                  e.printStackTrace();
              }
              
-            logger.info(String.format("File transmission completed. Closing the connection"));
+            logger.info(String.format("File transmission compleated. Closing the connection..."));
              
         } catch (IOException e) {
             logger.error(String.format("Exception caught when trying to listen "

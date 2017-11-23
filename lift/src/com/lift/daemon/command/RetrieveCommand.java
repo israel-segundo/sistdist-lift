@@ -2,33 +2,28 @@ package com.lift.daemon.command;
 
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
-import static com.lift.daemon.Daemon.sem;
-import com.lift.daemon.DaemonTask;
 import com.lift.daemon.FileProviderServer;
 import com.lift.daemon.RepositoryDAO;
-import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
-import java.net.Socket;
 
-
+/**
+ * This class handles the internal RETRIEVE operation.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class RetrieveCommand implements LiftCommand {
     
     private static final Logger logger  = new Logger(RetrieveCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
     
     private String fileID                    = null;
     private RepositoryDAO repositoryDatabase = null;
-    private Socket sock                      = null;
 
-    public RetrieveCommand(String fileID, RepositoryDAO repositoryDatabase, Socket sock) {
+    public RetrieveCommand(String fileID, RepositoryDAO repositoryDatabase) {
         this.fileID             = fileID;
         this.repositoryDatabase = repositoryDatabase;
-        this.sock               = sock;
     }
 
     @Override
@@ -39,11 +34,11 @@ public class RetrieveCommand implements LiftCommand {
         
         if(-1 == fileServerPort){
             logger.error("Unable to start the file server");
-            result.setMessage("error");
+            result.setMessage("Error: Unable to start the file server for data transmission.");
             
         } else{
             logger.info(String.format("It seems that the remote file provider was opened in port %d", fileServerPort));
-            result.setMessage("success");
+            result.setMessage("Success setting the file server.");
         }
         
         result.setReturnCode(fileServerPort);
@@ -57,18 +52,22 @@ public class RetrieveCommand implements LiftCommand {
         
         int fileProviderServerPort  = -1;
         String filePath = repositoryDatabase.getFileByID(fileID).getName();
+        
+        // increment the hits by one
+        repositoryDatabase.getFilesMap().get(fileID).incrementHits(1);
+        repositoryDatabase.commit();
 
         try{
-            ServerSocket serverSocket   = new ServerSocket(0);
-            fileProviderServerPort      = serverSocket.getLocalPort();            
+            ServerSocket serverSocket = new ServerSocket(0);
+            fileProviderServerPort    = serverSocket.getLocalPort();            
             
-            Thread fileProviderServerThread = new Thread(new FileProviderServer(serverSocket,filePath));
+            Thread fileProviderServerThread = new Thread(new FileProviderServer(serverSocket, filePath));
             fileProviderServerThread.start();
             
             logger.info("Spawned fileserver socket server. Listening in port: " + fileProviderServerPort);
             
         } catch(Exception ex){
-            logger.error("Exception caught on  startFileProviderServer");
+            logger.error("Exception caught on startFileProviderServer");
             ex.printStackTrace();
         }
 

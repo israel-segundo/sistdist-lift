@@ -1,4 +1,3 @@
-
 package com.lift.daemon;
 
 import com.lift.common.AppConfig;
@@ -7,7 +6,13 @@ import com.lift.common.ServerConsumer;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-public class HearthBeatService implements Runnable{
+/**
+ * This class handles the HeartBeat updated sent to Lift service for QoS analysis.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
+public class HearthBeatService implements Runnable {
 
     private static Logger logger = new Logger(HearthBeatService.class, AppConfig.logFilePath + File.separator + "lift.log");
     private AppConfig appConfig;

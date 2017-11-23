@@ -2,7 +2,12 @@ package com.lift.common;
 
 import java.util.Arrays;
 
-
+/**
+ * This class handles the progress bar shown to user when doing a remote file retrieval
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class ProgressBar {
     private long totalSize;
     private double square;

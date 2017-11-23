@@ -3,13 +3,19 @@ package com.lift.daemon.command;
 import com.lift.common.AppConfig;
 import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
-import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryDAO;
 import com.lift.daemon.Result;
 import com.lift.daemon.SessionDAO;
 import java.io.File;
 
-
+/**
+ * This class handles the Lift UFL operation:
+ * 
+ * $ lift ufl <fileID>
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class UflCommand implements LiftCommand {
     
     private static final Logger logger  = new Logger(UflCommand.class, AppConfig.logFilePath + File.separator + "lift.log");

@@ -48,7 +48,6 @@ public class RepositoryDAO {
         this.gson = gson;
     }
     
-    
     public Map<String, RepositoryFile> getFilesMap() {
         return filesMap;
     }

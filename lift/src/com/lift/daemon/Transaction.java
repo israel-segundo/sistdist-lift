@@ -1,8 +1,14 @@
-
 package com.lift.daemon;
 
 import java.io.Serializable;
 
+/**
+ * This class represents a transaction to be used for communication between 
+ * daemon and client
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class Transaction implements Serializable{
 
     protected String operation;

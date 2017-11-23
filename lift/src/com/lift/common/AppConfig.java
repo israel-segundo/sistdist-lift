@@ -1,17 +1,18 @@
-
 package com.lift.common;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Properties;
 
+/**
+ * This class represents the User Config for Lift
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class AppConfig {
-
-    //private static final Logger logger = new Logger(AppConfig.class);
     
     private Properties properties;
     private final String configFilePath = "lift-config.properties";
@@ -19,7 +20,6 @@ public class AppConfig {
     
     public AppConfig(){
         
-        //logger.info("Loading properties file.");
         properties = new Properties();
 
         loadPropertiesFromDisk();
@@ -33,8 +33,8 @@ public class AppConfig {
         InputStream input = null;
         
         try{
+            
             input = AppConfig.class.getClassLoader().getResourceAsStream(configFilePath);
-            //logger.info("Input:" + input);
             properties.load(input);
             
         } catch(Exception exception){

@@ -5,7 +5,6 @@ import com.lift.common.CommonUtility;
 import com.lift.common.Logger;
 import com.lift.common.Operation;
 import com.lift.common.ProgressBar;
-import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.SessionDAO;
@@ -22,8 +21,6 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * This class handles the client operations received by the Client Launcher.
@@ -34,7 +31,7 @@ import java.util.logging.Level;
 public class ClientManager {
     
     private static Logger logger                = null;
-    private static String clientVersion         = "1.0.0";
+    private static String clientVersion         = "1.0.1";
     private static String clientBuildDate       = Calendar.getInstance().getTime().toString();
     private static final int SUCCESS            = 0;
     private int daemonPort                      = 0;
@@ -75,12 +72,11 @@ public class ClientManager {
             sessionDatabase = new SessionDAO(new File(sessionFileLocation));
             sessionDatabase.reload();
             
-            logger.info("Session database loaded.");
             logger.info(appConfig.toString());
             
             daemonPort = sessionDatabase.getSession().getDaemonPort();
             
-        }catch(Exception ex){
+        } catch(Exception ex) {
 
             logger.error("Error at loading session database");
             
@@ -91,7 +87,7 @@ public class ClientManager {
         
         Result result = null;
 
-        logger.info(" :)~ Trying to establish a connection to the daemon : " + transaction.getOperation());
+        logger.info("Trying to establish a connection to the daemon. Operation: " + transaction.getOperation().toUpperCase());
 
         try (Socket sock = new Socket(daemonHostname, daemonPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
@@ -163,7 +159,7 @@ public class ClientManager {
     public void get(String ufl) {
         
         if(! CommonUtility.isUFLValid(ufl)) {
-            System.out.println("The UFL is invalid. Please provide a valid UFL.");
+            System.out.println("Error: The UFL is invalid. Please provide a valid UFL.");
             return;
         }
 
@@ -180,17 +176,14 @@ public class ClientManager {
         Result metadata            = sendOperationToDaemon(getTransaction);
 
         if (metadata.getReturnCode() != SUCCESS) {
-            logger.info("Metadata response is: " + metadata.getReturnCode());
-            logger.info("Metadata msg is: " + metadata.getMessage());
+            logger.error("Error getting metadata: " + metadata.getMessage());
             System.out.println(metadata.getMessage());
-            System.out.println("Could not connect to remote host. Is it up? ");
+            System.out.println("Error: Could not get metadata from remote host. The host might not be available. ");
             return;
         }
         
         RepositoryFile file = (RepositoryFile) metadata.getResult();
         long totalSize = file.getSize();
-        
-        logger.info("DOWNLOAD: Total size from file is " + totalSize);
 
         // If metadata is successful this means the download has been started by a daemon thread
         // Start reading from the socket the longs sent by daemon for progress bar
@@ -198,10 +191,10 @@ public class ClientManager {
         
         if(wasDownloadSuccessful){
             AppConfig appConfig = new AppConfig();
-            System.out.printf("\nDownload complete!\n");
-            System.out.printf("File location : %s\n", appConfig.getProperties().getProperty("lift.shared.dir") );
+            System.out.printf("\nDownload complete.\n");
+            System.out.printf("\nFile location: %s\n", appConfig.getProperties().getProperty("lift.shared.dir") + File.separator + file.getName());
         } else{
-            System.out.printf("\nCould not complete download operation.\n");
+            System.out.printf("\nError: Could not complete download operation.\n");
         }
         
         sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false", "0"}));
@@ -281,10 +274,10 @@ public class ClientManager {
         // TODO:  VERY IMPORTANT Implement timeout mech
         ServerSocket clientDaemonSocket;
         try {
-            clientDaemonSocket                      = new ServerSocket(0);
-            int progressBarServerPort               = clientDaemonSocket.getLocalPort();
+            clientDaemonSocket          = new ServerSocket(0);
+            int progressBarServerPort   = clientDaemonSocket.getLocalPort();
             
-            logger.info("Progressbar socket listening on port : " + progressBarServerPort);
+            logger.info("Progress bar socket listening on port : " + progressBarServerPort);
             
             
             // Send client port to daemon so they can send delta signals

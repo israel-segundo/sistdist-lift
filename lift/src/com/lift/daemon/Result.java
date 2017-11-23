@@ -1,9 +1,13 @@
-
 package com.lift.daemon;
 
 import java.io.Serializable;
 
-
+/**
+ * This class represents a result object with return code, message and result.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class Result<T> implements Serializable {
     
     private int returnCode;

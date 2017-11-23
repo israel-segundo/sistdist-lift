@@ -21,6 +21,13 @@ import com.lift.daemon.command.UflCommand;
 import com.lift.daemon.command.VersionCommand;
 import java.io.File;
 
+
+/**
+ * This class handles the individual operations supported by Lift
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class DaemonTask implements Runnable {
     
     private static final Logger logger  = new Logger(DaemonTask.class, AppConfig.logFilePath + File.separator + "lift.log");
@@ -78,10 +85,10 @@ public class DaemonTask implements Runnable {
                 
             case Operation.GET:
                 
-                logger.info("Sem from DAEMONTASK hashcode: " + sem.hashCode());
                 GetCommand getCommand = new GetCommand(firstParameter, sem);
                 Result result         = getCommand.getMetadataFromRemoteClient(firstParameter);
                 
+                // Check if metadata was obtained succesfully
                 if (result.getReturnCode() != Daemon.SUCCESS) {
                     Daemon.terminateDownload = true;
                     sem.terminate = Boolean.getBoolean(firstParameter);
@@ -96,28 +103,23 @@ public class DaemonTask implements Runnable {
                 Thread downloadFile = new Thread(getCommand);
                 downloadFile.start();
                 
-                logger.info("PID DAEMONTASK: " + downloadFile.getId());
                 
                 return result;
                 
             case Operation.CLIENT_READY:
-                String clientReady        = parameters[0];
-                String progressBarServerPort       = parameters[1];
-                Daemon.isClientReady      = Boolean.valueOf(clientReady);
-                Daemon.progressBarServerPort = Integer.parseInt(progressBarServerPort);
                 
-                sem.isReady = Boolean.valueOf(clientReady);
-                sem.progressBarServerPort = Integer.parseInt(progressBarServerPort);
+                String clientReady            = parameters[0];
+                String progressBarServerPort  = parameters[1];
                 
-                logger.info("isClientReady: " + sem.isReady);
-                logger.info("progressBarServerPort: " + sem.progressBarServerPort);
+                sem.isReady                   = Boolean.valueOf(clientReady);
+                sem.progressBarServerPort     = Integer.parseInt(progressBarServerPort);
                 
                 return new Result();
                 
             case Operation.TERMINATE_DOWNLOAD:
                 
                 Daemon.terminateDownload = Boolean.valueOf(firstParameter);
-                sem.terminate = Boolean.valueOf(firstParameter);
+                sem.terminate            = Boolean.valueOf(firstParameter);
                 
                 return new Result();
                 
@@ -126,7 +128,7 @@ public class DaemonTask implements Runnable {
                 break;    
                 
             case Operation.RETRIEVE:                
-                command = new RetrieveCommand(firstParameter, repositoryDB, sock);
+                command = new RetrieveCommand(firstParameter, repositoryDB);
                 break;
                 
             case Operation.ID:

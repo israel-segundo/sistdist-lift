@@ -2,12 +2,18 @@ package com.lift.daemon.command;
 
 import com.lift.common.AppConfig;
 import com.lift.common.Logger;
-import com.lift.daemon.Daemon;
 import com.lift.daemon.Result;
 import java.io.File;
 import java.util.Calendar;
 
-
+/**
+ * This class handles the Lift VERSION operation:
+ * 
+ * $ lift version
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class VersionCommand implements LiftCommand {
     
     private static final Logger logger  = new Logger(VersionCommand.class, AppConfig.logFilePath + File.separator + "lift.log");

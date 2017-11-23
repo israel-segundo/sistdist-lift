@@ -5,7 +5,12 @@ import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import java.io.File;
 
-
+/**
+ * This class handles the internal META operation.
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class MetaCommand implements LiftCommand {
     
     private String fileID                    = null;

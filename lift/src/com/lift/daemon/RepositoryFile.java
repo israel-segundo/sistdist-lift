@@ -55,6 +55,12 @@ public class RepositoryFile implements Serializable {
         this.hits = hits;
     }
     
+    public int incrementHits(int increment) {
+        this.hits = this.hits + increment;
+        
+        return hits;
+    }
+    
     public void setSize(long size) {
         this.size = size;
     }

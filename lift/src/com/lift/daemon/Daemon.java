@@ -10,7 +10,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -27,9 +26,9 @@ import java.util.logging.Level;
 public class Daemon {
     
     public static class Sem {
-        public volatile boolean isReady   = false;
-        public volatile boolean terminate = false;
-        public volatile int progressBarServerPort  = 0;
+        public volatile boolean isReady             = false;
+        public volatile boolean terminate           = false;
+        public volatile int progressBarServerPort   = 0;
     }
        
     private static Logger logger        = null;
@@ -50,11 +49,11 @@ public class Daemon {
     
     public static boolean isConnected                = true;
     
-    // To be used for download
+    // To be used for download operation
     public static volatile boolean isClientReady     = false;
     public static Socket localClientSocket           = null;
     public static volatile boolean terminateDownload = false;
-    public static volatile int progressBarServerPort    = 0;
+    public static volatile int progressBarServerPort = 0;
     public static volatile Sem sem = new Sem();
         
     public static void main(String[] args) {
@@ -131,7 +130,6 @@ public class Daemon {
             }
         }
         
-        
         HearthBeatService heartBeatService = new HearthBeatService(sessionDatabase, repositoryDatabase);
         new Thread(heartBeatService).start();
     }
@@ -161,8 +159,8 @@ public class Daemon {
             ip = InetAddress.getLocalHost();
             ipAddress = ip.getHostAddress();
             hostname = ip.getHostName();
-            System.out.println("Your current IP address : " + ip);
-            System.out.println("Your current Hostname : " + hostname);
+            //System.out.println("Your current IP address : " + ip);
+            //System.out.println("Your current Hostname : " + hostname);
  
         } catch (UnknownHostException e) {
  
@@ -170,10 +168,6 @@ public class Daemon {
             logger.error(e.getMessage());
             
         }
-        
-        logger.info("Session database object = " + sessionDatabase);
-        logger.info("sessionDatabase object = " + sessionDatabase);
-        
         
         boolean wasRegistered = serverConsumer.register(sessionDatabase.getSession().getGUID(), 
                                                         ipAddress,
@@ -237,18 +231,15 @@ public class Daemon {
     }
     
     private static void initSessionDatabase() {
-        logger.info("init session database");
+        logger.info("Session file is: " + sessionFile.getAbsolutePath());
         sessionDatabase = new SessionDAO(sessionFile);
         sessionDatabase.getSession().setSharedDirRoute(sharedDirPath);
-        logger.info("end init session database");
 
     }
     
     private static void initRepositoryDatabase() {
-        logger.info("init repo database");
         logger.info("Repository file is: " + repositoryFile.getAbsolutePath());
         repositoryDatabase = new RepositoryDAO(repositoryFile);
-        logger.info("end init repo  database");
     }
     
     private static void initConfigDirectory() {
@@ -256,7 +247,7 @@ public class Daemon {
         logger.info("Config directory is: " + configDirFile.getAbsolutePath());
         
         if (!configDirFile.exists()) {
-            logger.info("Config directory does not exist. Attempting to create");
+            logger.info("Config directory does not exist. Attempting to create...");
             configDirFile.mkdirs();
         }
         

@@ -11,7 +11,6 @@ import com.lift.daemon.Daemon;
 import com.lift.daemon.RepositoryFile;
 import com.lift.daemon.Result;
 import com.lift.daemon.Transaction;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,9 +21,15 @@ import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-
+/**
+ * This class handles the Lift GET operation:
+ * 
+ * $ lift get <ufl>
+ * 
+ * @author Alejandro Garcia
+ * @author Israel Segundo
+ */
 public class GetCommand implements Runnable {
     
     private static final Logger logger  = new Logger(GetCommand.class, AppConfig.logFilePath + File.separator + "lift.log");
@@ -115,9 +120,10 @@ public class GetCommand implements Runnable {
     
     
     private Result retrieveFileFromRemoteClient(String remoteHostname, int remotePort, String fileID, String fileName) {
+        
         Result result       = new Result();
         boolean isFileSaved = false;
-        long bytesReceived        = 0;
+        long bytesReceived  = 0;
         
         try (// localSock: used for sending progress
              Socket progressBarSock             = new Socket("localhost", sem.progressBarServerPort);
@@ -150,15 +156,19 @@ public class GetCommand implements Runnable {
             
             logger.info("File provider server was started. Listening remotely on port " + fileProviderPort);
             
-            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.separator + fileName);
             // ------------------------------------------------------------------------------------------------------------
-            //  Transmission of data
+            
+            
+            String downloadedFileName = CommonUtility.generateGUID(0, 8) + "-" + fileName;
+            File writeLocation = new File(Daemon.sharedDirFile.getAbsolutePath() + File.separator + downloadedFileName);
+            // ------------------------------------------------------------------------------------------------------------
+            //  BEGIN: Transmission of data
             // ------------------------------------------------------------------------------------------------------------              
             
             try(Socket fileTransferSock            = new Socket(remoteHostname, fileProviderPort);
                 ObjectOutputStream fileTransferOut = new ObjectOutputStream(fileTransferSock.getOutputStream());
                 InputStream  fileTransferIn        = fileTransferSock.getInputStream();
-                FileOutputStream fos = new FileOutputStream(writeLocation);){
+                FileOutputStream fos               = new FileOutputStream(writeLocation);){
                 
                 
                 logger.info(String.format("Opening connection to file provider server %s and port %d", remoteHostname, fileProviderPort));
@@ -180,12 +190,11 @@ public class GetCommand implements Runnable {
                         progressBarOut.writeLong(readBytes);
                     }
 
-                    logger.info("Received from client [" + remoteHostname + "] " + readBytes + " bytes.");
-                    logger.info(String.format("progress [%d/%d] - remaining: %d", bytesReceived, totalBytes, remainingBytes));
+                    //logger.info("Received from client [" + remoteHostname + "] " + readBytes + " bytes.");
+                    //logger.info(String.format("progress [%d/%d] - remaining: %d", bytesReceived, totalBytes, remainingBytes));
                     
                     // write buffer to filesystem
                     try {
-                        logger.info("Writing " + readBytes + " bytes to disk");
                         fos.write(buffer, 0, (int)readBytes);
                         isFileSaved = true;
                     } catch (IOException e) {
@@ -199,23 +208,22 @@ public class GetCommand implements Runnable {
                 
                 if (isFileSaved) {
                     result.setReturnCode(0);
-                    result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + fileName);
+                    result.setResult(Daemon.sharedDirFile.getAbsolutePath() + File.pathSeparator + downloadedFileName);
                 } else {
                     result.setReturnCode(1);
                     result.setMessage("Daemon: File " + Daemon.sharedDirFile.getAbsolutePath() +
-                            File.pathSeparator + fileName + " could not be saved.");
+                            File.pathSeparator + downloadedFileName + " could not be saved.");
                 }                
                 
             }catch (IOException e) {
                 logger.error("Can not connect to remote file provider server  at [" + remoteHostname + ":" + fileProviderPort + "]");
-                e.printStackTrace();
                 result.setReturnCode(2);
                 result.setMessage("Daemon: Cannot connect to remote peer for file download");
             } 
+            // ------------------------------------------------------------------------------------------------------------  
             
         } catch (IOException | ClassNotFoundException e) {
             logger.error("Can not connect to remote Lift client at [" + remoteHostname + ":" + remotePort + "]");
-            e.printStackTrace();
             result.setReturnCode(2);
             result.setMessage("Daemon: Can not connect to remote Lift client. Client might not be available.");
         } 
@@ -231,15 +239,11 @@ public class GetCommand implements Runnable {
         String clientGUID   = decodedUFL[0];
         String fileID       = decodedUFL[1];
         
-        // VERY IMPORTAN: do not start the download unless a local connection is made and client is ready
-        
-       logger.info("PID GETCMD: " + Thread.currentThread().getId());
-        logger.info("Sem from GET CMD hashcode: " + sem.hashCode());
+        // VERY IMPORTANT: do not start the download unless a local connection is made and client is ready
         while (sem.isReady == false) {
-            //logger.info("Waiting... isClientReady: " + sem.isReady);
             // Wait until the local client is ready start the handling the download...
         }
-        logger.info("Finished Waiting...");
+        logger.info("Finished waiting...");
         if(sem.terminate) return;
                       
         Gson gson = new Gson();
