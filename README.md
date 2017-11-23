@@ -17,8 +17,9 @@ Napster and GNUtella were analyzed from a technical point of view and some of it
 
 $ unzip master.zip
 
-$ ls /scratch/lift
-lift-server  lift  LICENSE  README.md
+$ pwd
+
+/scratch/lift
 
 2. Configure the default shared directory (where files will be downloaded) in lift-config.properties:
 
