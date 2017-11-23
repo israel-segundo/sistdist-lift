@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -90,7 +91,7 @@ public class ClientManager {
         
         Result result = null;
 
-        logger.info("Trying to establish a connection to the daemon");
+        logger.info(" :)~ Trying to establish a connection to the daemon : " + transaction.getOperation());
 
         try (Socket sock = new Socket(daemonHostname, daemonPort);
              ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
@@ -101,8 +102,6 @@ public class ClientManager {
                 
                 // Wait and Receive Result
                 result = (Result) in.readObject();
-
-                logger.info("Received result from daemon: " + result);
                 
         } catch (UnknownHostException e) {
                 logger.error("Don't know about host " + daemonHostname);
@@ -132,7 +131,6 @@ public class ClientManager {
 
             String format = CommonUtility.getFormatForFilesCmd(map);
             sb.append( String.format(format, "LOCATION", "FILE ID", "DATE ADDED", "SIZE", "HITS") );
-            
 
             fileSet.forEach((entry) -> {
                 String location     = entry.getValue().getName();
@@ -185,7 +183,7 @@ public class ClientManager {
             logger.info("Metadata response is: " + metadata.getReturnCode());
             logger.info("Metadata msg is: " + metadata.getMessage());
             System.out.println(metadata.getMessage());
-            sendOperationToDaemon(new Transaction(Operation.TERMINATE_DOWNLOAD, new String [] {"false"}));
+            System.out.println("Could not connect to remote host. Is it up? ");
             return;
         }
         
@@ -196,7 +194,15 @@ public class ClientManager {
 
         // If metadata is successful this means the download has been started by a daemon thread
         // Start reading from the socket the longs sent by daemon for progress bar
-        readDownloadProgressFromDaemon(totalSize);
+        boolean wasDownloadSuccessful = readDownloadProgressFromDaemon(totalSize);
+        
+        if(wasDownloadSuccessful){
+            AppConfig appConfig = new AppConfig();
+            System.out.printf("\nDownload complete!\n");
+            System.out.printf("File location : %s\n", appConfig.getProperties().getProperty("lift.shared.dir") );
+        } else{
+            System.out.printf("\nCould not complete download operation.\n");
+        }
         
         sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false", "0"}));
         
@@ -268,7 +274,7 @@ public class ClientManager {
     }
     
     public boolean readDownloadProgressFromDaemon(long totalDataSize) {
-        boolean isErrorPresent = false;
+        boolean isDownloadCompleted = true;
         long delta             = 0;
         ProgressBar bar        = new ProgressBar(totalDataSize, "Downloading");
         
@@ -298,18 +304,20 @@ public class ClientManager {
                 
                 while(isTransmissionActive){
                     
-                    delta            = in.readLong();
-                    bytesTransmitted = bytesTransmitted + delta;
-                    bar.updateProgress(delta);
-
-                    logger.info("Read bytes : " + delta);
-                    logger.info(String.format("Progress bar %s/%s", bytesTransmitted, totalDataSize));
+                    try{
+                        delta            = in.readLong();
+                    }catch(Exception ex){
+                        
+                    }     
                     
-                    isTransmissionActive = (bytesTransmitted < totalDataSize);
+                    bytesTransmitted = bytesTransmitted + delta;
+                    bar.updateProgress(bytesTransmitted);
+               
+                    isTransmissionActive = (bytesTransmitted <= totalDataSize);
                 }
 
             } catch (IOException ex) {
-                isErrorPresent = true;
+                isDownloadCompleted = false;
                 ex.printStackTrace();
                 sendOperationToDaemon(new Transaction(Operation.CLIENT_READY, new String [] {"false", "0"}));
                 System.out.printf("\n\nError: The connection was interrupted.\n");
@@ -322,6 +330,6 @@ public class ClientManager {
         }
         
         
-        return isErrorPresent;
+        return isDownloadCompleted;
     }
 }

@@ -8,9 +8,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.TimeUnit;
 
 public class FileProviderServer implements Runnable{
 
@@ -34,33 +34,38 @@ public class FileProviderServer implements Runnable{
 
             logger.info(String.format("File server provider received a connection"));
 
-            
-            byte[] buffer = new byte[2048];
+            byte[] buffer = new byte[8192];
 
             File file               = new File(filePath);
-
-             try (ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                  ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream()))
+            long bytesTransmitted   = 0;
+             try (
+                  FileInputStream fileInputStream = new FileInputStream(file);
+                  BufferedInputStream bis         = new BufferedInputStream(fileInputStream);
+                  OutputStream out                = clientSocket.getOutputStream();
+                )
              {
-                FileInputStream fileInputStream = new FileInputStream(file);
-                BufferedInputStream bis         = new BufferedInputStream(fileInputStream);
+                
                 int length;
                 while ((length = bis.read(buffer, 0, buffer.length)) != -1){
+                    
+                    bytesTransmitted = bytesTransmitted + length;
                     logger.info("Transmitting " + length + " bytes");
+                    
                     out.write(buffer, 0, length);
                 }
-                out.flush();
-                //boolean finishedSignal = in.readBoolean();
-                //logger.info("Read finished signal : " + finishedSignal);
                 
-                 bis.close();
-                 fileInputStream.close();
+                logger.info("Total bytes transmitted to client daemon:  " + bytesTransmitted );
 
+                boolean flag = true;
+                while(flag){
+                    flag = flag;
+                }                
+                
              } catch (IOException e) {
                  logger.error("Could not read the requested file: " + filePath);
                  e.printStackTrace();
              }
-            clientSocket.close();
+             
             logger.info(String.format("File transmission completed. Closing the connection"));
              
         } catch (IOException e) {

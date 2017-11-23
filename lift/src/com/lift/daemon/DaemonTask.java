@@ -125,9 +125,7 @@ public class DaemonTask implements Runnable {
                 command = new MetaCommand(firstParameter, repositoryDB);
                 break;    
                 
-            case Operation.RETRIEVE:
-                // TODO:  Extends retrieve functionality
-                
+            case Operation.RETRIEVE:                
                 command = new RetrieveCommand(firstParameter, repositoryDB, sock);
                 break;
                 

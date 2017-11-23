@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 /**
  * Lift Daemon
@@ -64,7 +65,7 @@ public class Daemon {
         initRepository();
         initSharedDirectory();
         
-        spawnHeartbeatService();
+        //spawnHeartbeatService();
         
         ServerSocket serverSocket;
         ExecutorService service = Executors.newCachedThreadPool();
@@ -77,7 +78,7 @@ public class Daemon {
             
             logger.info(String.format("Daemon listening on port: [%d]", portNumber));
             
-            registerIntoServer();
+            //registerIntoServer();
             
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -118,7 +119,18 @@ public class Daemon {
     
     private static void spawnHeartbeatService(){
         
-        repositoryDatabase.commit();
+        if(repositoryDatabase.getDatabaseFile().exists()) {
+            // Load session from file
+            repositoryDatabase.reload();
+        } else {
+            
+            try {
+                repositoryDatabase.getDatabaseFile().createNewFile();
+            } catch (IOException ex) {
+                java.util.logging.Logger.getLogger(Daemon.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
         
         HearthBeatService heartBeatService = new HearthBeatService(sessionDatabase, repositoryDatabase);
         new Thread(heartBeatService).start();
@@ -158,11 +170,16 @@ public class Daemon {
             logger.error(e.getMessage());
             
         }
+        
+        logger.info("Session database object = " + sessionDatabase);
+        logger.info("sessionDatabase object = " + sessionDatabase);
+        
+        
         boolean wasRegistered = serverConsumer.register(sessionDatabase.getSession().getGUID(), 
                                                         ipAddress,
                                                         hostname,
                                                         sessionDatabase.getSession().getDaemonPort(),
-                                                        repositoryDatabase.getFileCount());
+                                                        0);
         
         if(wasRegistered){
             logger.info("We got registered into the lift-server.");

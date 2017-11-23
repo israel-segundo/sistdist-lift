@@ -64,7 +64,7 @@ public class Logger {
              PrintWriter out    = new PrintWriter(bw)
         ){
             out.println(String.format("%s - %-5s : %-15s - %s", currentTime, type, sourceClass.getSimpleName() , message));
-            System.out.println(String.format("%s - %-5s : %-15s - %s", currentTime, type, sourceClass.getSimpleName() , message));
+            //System.out.println(String.format("%s - %-5s : %-15s - %s", currentTime, type, sourceClass.getSimpleName() , message));
         } catch (IOException e) {
             // nothing for now...
         }
