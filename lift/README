@@ -1,14 +1,14 @@
 ------------------------------------------
-How to run
+How to Run Client
 ------------------------------------------
 
-- Clean, compile, generate the jar file:
+- Clean, compile and generate the jar file:
 	$ ./lift-build.sh
 	
-- Export the LIFT_HOME pointing to intallation directory:
+- Export the LIFT_HOME var pointing to installation directory:
 	$ export LIFT_HOME=/home/lift/
 
 - How to run lift-client:
 	$ ./lift.sh <params>
-	$ ./lift.sh add somefile
+	$ ./lift.sh --help
 
