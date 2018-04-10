@@ -1,27 +1,14 @@
-Things TO DO:
-
-- Get command - this is crazy!
-- Server:
-    a) Script for cleaning database unused sessions (SQL Proc?)
-    b) Entries in MongoDB should have following attributes:
-        clientGUID, IP Address, Port, Date Joined, Last Accessed, Hits, Last Heartbeat, NumberFilesShared
-- Scripts for quick testing and few scenarios for MR DR to run them
-- Scripts for installation (create default shared dir, symlink for binary, etc)
-- Scripts for Daemon:
-    a) Should check periodically if daemon is running
-    b) Should also check if the repository state exists and it's readable
-    c) Should be able to Start/Stop/Restart Daemon
-
-
+------------------------------------------
 How to run
 ------------------------------------------
 
-- Install ant. (please!)
-- Clean, compile, generate jar 
+- Clean, compile, generate the jar file:
 	$ ./lift-build.sh
+	
+- Export the LIFT_HOME pointing to intallation directory:
+	$ export LIFT_HOME=/home/lift/
 
 - How to run lift-client:
 	$ ./lift.sh <params>
 	$ ./lift.sh add somefile
 
-- Default config property files for MacOS and Windows.
